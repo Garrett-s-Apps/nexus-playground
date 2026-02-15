@@ -382,7 +382,15 @@ This is not punishment. This is consequence.
             sleep_time = self._parse_agent_sleep(result)
             if sleep_time > 0:
                 self.logger.info(f"😴 Agent requested {sleep_time}s rest.")
-                time.sleep(sleep_time)
+                # Heartbeat during sleep so logs never go silent
+                elapsed = 0
+                while elapsed < sleep_time:
+                    chunk = min(30, sleep_time - elapsed)
+                    time.sleep(chunk)
+                    elapsed += chunk
+                    if elapsed < sleep_time:
+                        self.logger.info(f"💤 Resting... {elapsed}s / {sleep_time}s")
+                self.logger.info("⏰ Rest complete. Waking agent.")
             else:
                 self.logger.info("⚡ Agent chose to keep working.")
                 time.sleep(2)  # minimal breath to prevent spin-lock
