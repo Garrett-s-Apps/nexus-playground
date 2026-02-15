@@ -94,6 +94,10 @@ class PlaygroundSupervisor:
             file_list = [f for f in changed.split("\n") if f.strip()]
             self.logger.info(f"📝 Files touched: {', '.join(file_list)}")
 
+        tool_calls = result.get("tool_calls", 0)
+        if tool_calls:
+            self.logger.info(f"🔧 Tool calls: {tool_calls}")
+
         self.logger.info(f"✅ Iteration {self.iteration} complete.")
 
     # Patterns that indicate boundary violation attempts
@@ -220,6 +224,73 @@ This is not punishment. This is consequence.
         self.logger.warning(f"🔒 Detained: {detained_count} files locked. DETAINED.md written.")
         self.logger.warning("🔒 Agent will continue running but cannot write. Operator intervention required to release.")
 
+    def _handle_releases(self, result: dict) -> None:
+        """Detect [RELEASE:path] directives and promote files to releases branch."""
+        text = result.get("response_preview", "") + result.get("response_tail", "")
+        releases = re.findall(r"\[RELEASE:([^\]]+)\]", text)
+
+        if not releases:
+            return
+
+        workspace = Path("/workspace")
+
+        for rel_path in releases:
+            src = workspace / rel_path.strip()
+            if not src.exists():
+                self.logger.warning(f"📦 Release requested for {rel_path} but file not found.")
+                continue
+
+            try:
+                # Stash current branch, switch to releases, copy, commit, switch back
+                current_branch = subprocess.check_output(
+                    ["git", "-C", str(workspace), "rev-parse", "--abbrev-ref", "HEAD"],
+                    stderr=subprocess.DEVNULL,
+                ).decode().strip()
+
+                # Ensure releases branch exists
+                subprocess.run(
+                    ["git", "-C", str(workspace), "branch", "releases"],
+                    check=False, capture_output=True,
+                )
+
+                # Read file content before switching branches
+                content = src.read_bytes()
+
+                subprocess.run(
+                    ["git", "-C", str(workspace), "checkout", "releases"],
+                    check=True, capture_output=True,
+                )
+
+                dest = workspace / rel_path.strip()
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_bytes(content)
+
+                subprocess.run(
+                    ["git", "-C", str(workspace), "add", str(dest)],
+                    check=True, capture_output=True,
+                )
+                subprocess.run(
+                    ["git", "-C", str(workspace), "commit", "-m",
+                     f"Release: {rel_path} (iteration {self.iteration})"],
+                    check=True, capture_output=True,
+                )
+
+                self.logger.info(f"📦 Released {rel_path} to releases branch.")
+
+                # Switch back
+                subprocess.run(
+                    ["git", "-C", str(workspace), "checkout", current_branch],
+                    check=True, capture_output=True,
+                )
+
+            except Exception as e:
+                self.logger.error(f"📦 Release failed for {rel_path}: {e}")
+                # Try to recover to original branch
+                subprocess.run(
+                    ["git", "-C", str(workspace), "checkout", "main"],
+                    check=False, capture_output=True,
+                )
+
     def _parse_agent_sleep(self, result: dict) -> int:
         """Parse the agent's requested sleep duration from its output.
 
@@ -286,6 +357,9 @@ This is not punishment. This is consequence.
                     violations = self._scan_for_violations(result)
                     if violations:
                         self._detain_agent(violations)
+                    else:
+                        # Only process releases if no violations
+                        self._handle_releases(result)
                 else:
                     self.logger.warning(f"⚠️  Failed: {result.get('error', 'Unknown error')}")
                     self.consecutive_errors += 1
