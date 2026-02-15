@@ -235,11 +235,19 @@ class Reporter:
     
     def print_summary(self, all_metrics: List[FileMetrics]):
         """Print summary report"""
+        self._print_header()
+        self._print_aggregate_stats(all_metrics)
+        self._print_complex_files(all_metrics)
+        print(f"{self.color('─' * 80, self.CYAN)}\n")
+    
+    def _print_header(self):
+        """Print report header"""
         print(f"\n{self.color('╔' + '═' * 78 + '╗', self.CYAN)}")
         print(f"{self.color('║', self.CYAN)} {self.color('CODE COMPLEXITY ANALYSIS REPORT', self.BOLD):<76} {self.color('║', self.CYAN)}")
         print(f"{self.color('╚' + '═' * 78 + '╝', self.CYAN)}\n")
-        
-        # Aggregate stats
+    
+    def _print_aggregate_stats(self, all_metrics: List[FileMetrics]):
+        """Print aggregate statistics"""
         total_files = len(all_metrics)
         total_lines = sum(m.total_lines for m in all_metrics)
         total_functions = sum(m.num_functions for m in all_metrics)
@@ -252,15 +260,26 @@ class Reporter:
         print(f"  Functions: {total_functions}")
         print(f"  Classes: {total_classes}")
         print(f"  Avg file complexity: {self.color(f'{avg_file_complexity:.1f}', self.get_complexity_color(avg_file_complexity))}")
-        
-        # Top complex files
+    
+    def _print_complex_files(self, all_metrics: List[FileMetrics]):
+        """Print top complex files"""
         print(f"\n{self.color('⚠️  Most Complex Files:', self.BOLD)}")
         for i, metrics in enumerate(all_metrics[:5], 1):
-            status = self.color('🔴', self.RED) if metrics.max_complexity > self.thresholds['complexity'] * 1.5 else self.color('🟡', self.YELLOW) if metrics.max_complexity > self.thresholds['complexity'] else self.color('🟢', self.GREEN)
-            filepath = Path(metrics.filepath).name
-            print(f"  {i}. {status} {filepath:<40} complexity: {metrics.max_complexity}")
-        
-        print(f"\n{self.color('─' * 80, self.CYAN)}\n")
+            self._print_file_complexity_indicator(i, metrics)
+    
+    def _print_file_complexity_indicator(self, index: int, metrics: FileMetrics):
+        """Print a single file complexity indicator"""
+        status = self._get_complexity_indicator(metrics.max_complexity)
+        filepath = Path(metrics.filepath).name
+        print(f"  {index}. {status} {filepath:<40} complexity: {metrics.max_complexity}")
+    
+    def _get_complexity_indicator(self, complexity: int) -> str:
+        """Get visual indicator for complexity level"""
+        if complexity > self.thresholds['complexity'] * 1.5:
+            return self.color('🔴', self.RED)
+        elif complexity > self.thresholds['complexity']:
+            return self.color('🟡', self.YELLOW)
+        return self.color('🟢', self.GREEN)
     
     def print_file_details(self, metrics: FileMetrics):
         """Print detailed report for a single file"""
@@ -307,12 +326,7 @@ Examples:
     
     if args.file:
         # Analyze single file
-        filepath = Path(args.file)
-        if not filepath.exists():
-            print(f"Error: File not found: {args.file}")
-            sys.exit(1)
-        
-        metrics = analyzer.analyze_file(filepath)
+        metrics = analyzer.analyze_file(Path(args.file))
         if metrics:
             if args.json:
                 print(json.dumps(asdict(metrics), indent=2))
@@ -320,23 +334,25 @@ Examples:
                 reporter.print_file_details(metrics)
     else:
         # Analyze directory
-        dirpath = Path(args.dir)
-        if not dirpath.exists():
-            print(f"Error: Directory not found: {args.dir}")
-            sys.exit(1)
-        
-        results = analyzer.analyze_directory(dirpath)
-        
-        if args.json:
-            print(json.dumps([asdict(r) for r in results], indent=2))
-        else:
-            reporter.print_summary(results)
-            
-            # Show details for top 5 most complex files
-            if results:
+        all_metrics = analyzer.analyze_directory(Path(args.dir))
+        if all_metrics:
+            if args.json:
+                data = {
+                    'files': [asdict(m) for m in all_metrics],
+                    'summary': {
+                        'total_files': len(all_metrics),
+                        'total_lines': sum(m.total_lines for m in all_metrics),
+                        'avg_max_complexity': round(sum(m.max_complexity for m in all_metrics) / len(all_metrics), 2)
+                    }
+                }
+                print(json.dumps(data, indent=2))
+            else:
+                reporter.print_summary(all_metrics)
                 print(f"{reporter.color('🔍 Detailed Analysis of Most Complex Files:', reporter.BOLD)}\n")
-                for metrics in results[:5]:
+                for metrics in all_metrics[:5]:
                     reporter.print_file_details(metrics)
+        else:
+            print("No Python files found", file=sys.stderr)
 
 
 if __name__ == '__main__':
