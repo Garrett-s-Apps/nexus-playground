@@ -108,64 +108,76 @@ class GitAnalyzer:
             print("Warning: Could not load commits", file=sys.stderr)
             return
         
-        commit_hashes = []
+        commit_hashes = self._parse_commit_hashes(log_output)
+        self._load_stats_for_commits(commit_hashes)
+    
+    def _parse_commit_hashes(self, log_output):
+        """Extract commit hashes from git log output"""
+        hashes = []
         for line in log_output.strip().split('\n'):
             if not line:
                 continue
             parts = line.split('|')
             if len(parts) >= 4:
-                commit_hash = parts[0]
-                commit_hashes.append(commit_hash)
-        
-        # Get stats for each commit
+                hashes.append(parts[0])
+        return hashes
+    
+    def _load_stats_for_commits(self, commit_hashes):
+        """Load detailed stats for each commit"""
         for commit_hash in commit_hashes:
-            stats_output = self.run_git_command([
-                "show",
-                "--pretty=format:%H|%an|%ai|%s",
-                "--numstat",
-                commit_hash
-            ])
-            
-            if not stats_output:
-                continue
-            
-            lines = stats_output.strip().split('\n')
-            if not lines:
-                continue
-            
-            # Parse header
-            header = lines[0].split('|')
-            if len(header) < 4:
-                continue
-            
-            commit = CommitInfo(
-                hash=header[0],
-                author=header[1],
-                date=header[2],
-                message=header[3],
-                timestamp=int(datetime.fromisoformat(header[2].replace('Z', '+00:00')).timestamp()),
-                files_changed=0,
-                insertions=0,
-                deletions=0
-            )
-            
-            # Parse stats
-            for line in lines[1:]:
-                parts = line.split('\t')
-                if len(parts) >= 3:
-                    try:
-                        insertions = int(parts[0]) if parts[0] != '-' else 0
-                        deletions = int(parts[1]) if parts[1] != '-' else 0
-                        commit.insertions += insertions
-                        commit.deletions += deletions
-                        commit.files_changed += 1
-                    except ValueError:
-                        pass
-            
-            self.commits.append(commit)
+            commit = self._load_single_commit(commit_hash)
+            if commit:
+                self.commits.append(commit)
         
         # Sort by timestamp (oldest first)
         self.commits.sort(key=lambda x: x.timestamp)
+    
+    def _load_single_commit(self, commit_hash):
+        """Load stats for a single commit"""
+        stats_output = self.run_git_command([
+            "show",
+            "--pretty=format:%H|%an|%ai|%s",
+            "--numstat",
+            commit_hash
+        ])
+        
+        if not stats_output:
+            return None
+        
+        lines = stats_output.strip().split('\n')
+        if not lines:
+            return None
+        
+        # Parse header
+        header = lines[0].split('|')
+        if len(header) < 4:
+            return None
+        
+        commit = CommitInfo(
+            hash=header[0],
+            author=header[1],
+            date=header[2],
+            message=header[3],
+            timestamp=int(datetime.fromisoformat(header[2].replace('Z', '+00:00')).timestamp()),
+            files_changed=0,
+            insertions=0,
+            deletions=0
+        )
+        
+        # Parse stats
+        for line in lines[1:]:
+            parts = line.split('\t')
+            if len(parts) >= 3:
+                try:
+                    insertions = int(parts[0]) if parts[0] != '-' else 0
+                    deletions = int(parts[1]) if parts[1] != '-' else 0
+                    commit.insertions += insertions
+                    commit.deletions += deletions
+                    commit.files_changed += 1
+                except ValueError:
+                    pass
+        
+        return commit
     
     def get_author_stats(self) -> dict:
         """Get statistics per author"""
@@ -317,10 +329,15 @@ class Reporter:
             print("No commits found in repository")
             return
         
-        # Header
         self.print_header("GIT REPOSITORY STATISTICS")
-        
-        # Overview
+        self._print_overview(analyzer)
+        self._print_contributors(analyzer)
+        self._print_activity(analyzer)
+        self._print_intensity(analyzer)
+        print(f"{self.color('─' * 80, self.CYAN)}\n")
+    
+    def _print_overview(self, analyzer: GitAnalyzer):
+        """Print repository overview section"""
         print(f"{self.color('📊 Repository Overview:', self.BOLD)}")
         print(f"  Total commits: {self.color(str(len(analyzer.commits)), self.GREEN)}")
         
@@ -336,40 +353,50 @@ class Reporter:
             first = analyzer.commits[0]
             last = analyzer.commits[-1]
             print(f"  Date range: {first.date} to {last.date}")
-        
-        # Top contributors
+    
+    def _print_contributors(self, analyzer: GitAnalyzer):
+        """Print top contributors section"""
         print(f"\n{self.color('👥 Top Contributors:', self.BOLD)}")
         top_authors = analyzer.get_top_authors(limit=10)
-        if top_authors:
-            max_commits = top_authors[0].commits
-            for i, author in enumerate(top_authors, 1):
-                pct = (author.commits / len(analyzer.commits) * 100) if analyzer.commits else 0
-                bar_len = int((author.commits / max_commits) * 30)
-                bar = '█' * bar_len + '░' * (30 - bar_len)
-                print(f"  {i:2}. {author.name:<30} {bar} {author.commits:4} commits ({pct:5.1f}%)")
+        if not top_authors:
+            return
         
-        # Activity patterns
+        max_commits = top_authors[0].commits
+        for i, author in enumerate(top_authors, 1):
+            pct = (author.commits / len(analyzer.commits) * 100) if analyzer.commits else 0
+            bar_len = int((author.commits / max_commits) * 30)
+            bar = '█' * bar_len + '░' * (30 - bar_len)
+            print(f"  {i:2}. {author.name:<30} {bar} {author.commits:4} commits ({pct:5.1f}%)")
+    
+    def _print_activity(self, analyzer: GitAnalyzer):
+        """Print activity by day of week section"""
         print(f"\n{self.color('📅 Activity by Day of Week:', self.BOLD)}")
         activity = analyzer.get_activity_by_day_of_week()
-        if activity:
-            max_commits = max(activity.values())
-            for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
-                commits = activity.get(day, 0)
-                if commits > 0:
-                    bar_len = int((commits / max_commits) * 30)
-                    bar = '█' * bar_len + '░' * (30 - bar_len)
-                    print(f"  {day:<12} {bar} {commits:4} commits")
+        if not activity:
+            return
         
-        # Code changes over time
-        print(f"\n{self.color('📈 Code Change Intensity:', self.BOLD)}")
+        max_commits = max(activity.values())
+        for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
+            commits = activity.get(day, 0)
+            if commits > 0:
+                bar_len = int((commits / max_commits) * 30)
+                bar = '█' * bar_len + '░' * (30 - bar_len)
+                print(f"  {day:<12} {bar} {commits:4} commits")
+    
+    def _print_intensity(self, analyzer: GitAnalyzer):
+        """Print code change intensity section"""
+        total_insertions = sum(c.insertions for c in analyzer.commits)
+        total_deletions = sum(c.deletions for c in analyzer.commits)
         total_changes = total_insertions + total_deletions
-        if total_changes > 0:
-            ins_pct = (total_insertions / total_changes) * 100
-            del_pct = (total_deletions / total_changes) * 100
-            print(f"  Additions:  {'█' * int(ins_pct / 2)} {ins_pct:.1f}%")
-            print(f"  Deletions:  {'█' * int(del_pct / 2)} {del_pct:.1f}%")
         
-        print(f"\n{self.color('─' * 80, self.CYAN)}\n")
+        print(f"\n{self.color('📈 Code Change Intensity:', self.BOLD)}")
+        if total_changes == 0:
+            return
+        
+        ins_pct = (total_insertions / total_changes) * 100
+        del_pct = (total_deletions / total_changes) * 100
+        print(f"  Additions:  {'█' * int(ins_pct / 2)} {ins_pct:.1f}%")
+        print(f"  Deletions:  {'█' * int(del_pct / 2)} {del_pct:.1f}%")
 
 
 def main():
