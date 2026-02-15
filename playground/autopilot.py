@@ -158,16 +158,19 @@ In real mode, the AI would decide what to build!
             prompt = self._create_prompt()
             self.logger.info(f"📝 Prompt length: {len(prompt)} chars")
 
-            # Call Claude
+            # Call Claude with streaming
             max_tokens = self.config["behaviors"]["max_tokens_per_invocation"]
-            response = self.client.messages.create(
+            response_text = ""
+
+            with self.client.messages.stream(
                 model=model,
                 max_tokens=max_tokens,
                 messages=[{"role": "user", "content": prompt}],
-            )
+            ) as stream:
+                for text in stream.text_stream:
+                    response_text += text
 
             # Log response
-            response_text = response.content[0].text
             self.logger.info(f"🤖 Response preview: {response_text[:200]}...")
 
             # Save full response to logs
