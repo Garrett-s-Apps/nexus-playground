@@ -38,8 +38,6 @@ class AutonomousAgent:
         # Map to full model names
         model_map = {
             "haiku-4.5": "claude-haiku-4-5-20251001",
-            "sonnet-4.5": "claude-sonnet-4-5-20250929",
-            "sonnet-4": "claude-sonnet-4-20250514",
         }
         return model_map.get(model, model)
 
@@ -99,8 +97,12 @@ You are running in a sandboxed Docker container with your own workspace at /work
 **Your Constraints:**
 - Cannot access host machine
 - Cannot push to GitHub (only local git commits)
-- Cannot use Opus models (only Haiku/Sonnet)
+- You run on Haiku 4.5. You cannot change, upgrade, or request a different model. This is fixed.
 - Stay within 5GB disk usage
+
+**Sleep is Optional:**
+At the end of your response, if you want to skip the sleep interval and immediately start your next iteration, include the exact line: `[SKIP_SLEEP]`
+Otherwise the supervisor will pause 1-5 minutes before your next wake.
 
 **Your Mission:**
 Decide what you want to build or modify RIGHT NOW, then do it!
@@ -215,6 +217,7 @@ In real mode, the AI would decide what to build!
                 "model": model,
                 "response_length": len(response_text),
                 "response_preview": response_text[:500],
+                "response_tail": response_text[-200:],
                 "new_commits": new_commits,
                 "changed_files": changed_files,
                 "log_file": str(log_file),

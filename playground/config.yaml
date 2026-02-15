@@ -2,17 +2,18 @@
 
 # Loop timing (seconds)
 loop_interval:
-  min: 60    # Minimum 1 minute between invocations
-  max: 300   # Maximum 5 minutes between invocations
+  min: 60    # Default minimum between invocations
+  max: 300   # Default maximum between invocations
+  skip_allowed: true  # Agent can request to skip sleep entirely
 
 # Model restrictions
 models:
   allowed:
     - haiku-4.5
-    - sonnet-4.5
-    - sonnet-4
   forbidden:
     - opus
+    - sonnet-4.5
+    - sonnet-4
 
 # Behavior controls
 behaviors:

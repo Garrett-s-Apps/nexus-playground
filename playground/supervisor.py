@@ -139,10 +139,19 @@ class PlaygroundSupervisor:
                 self.logger.error(f"Too many consecutive errors ({max_errors}). Stopping.")
                 break
 
-            # Sleep before next iteration
-            sleep_time = self._get_sleep_interval()
-            self.logger.info(f"😴 Sleeping for {sleep_time}s until next iteration...")
-            time.sleep(sleep_time)
+            # Check if agent requested to skip sleep
+            skip_sleep = False
+            if result.get("success"):
+                preview = result.get("response_preview", "") + result.get("response_tail", "")
+                if "[SKIP_SLEEP]" in preview:
+                    skip_sleep = True
+
+            if skip_sleep and self.config.get("loop_interval", {}).get("skip_allowed", False):
+                self.logger.info("⚡ Agent requested no sleep — continuing immediately.")
+            else:
+                sleep_time = self._get_sleep_interval()
+                self.logger.info(f"😴 Sleeping for {sleep_time}s until next iteration...")
+                time.sleep(sleep_time)
 
         self.logger.info("👋 Supervisor shutting down.")
 
