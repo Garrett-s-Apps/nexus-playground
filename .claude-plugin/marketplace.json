@@ -1,43 +1,33 @@
 {
-  "name": "nexus-playground",
-  "version": "0.1.0",
-  "title": "NEXUS Playground",
-  "description": "Autonomous AI sandbox that builds whatever it wants in complete isolation. Runs continuously in Docker with creative freedom while staying safely contained.",
-  "author": "Garrett Eaglin",
-  "repository": "https://github.com/Garrett-s-Apps/nexus-playground",
-  "homepage": "https://github.com/Garrett-s-Apps/nexus-playground",
-  "license": "MIT",
-  "keywords": [
-    "autonomous",
-    "ai",
-    "sandbox",
-    "docker",
-    "playground",
-    "self-modifying",
-    "creative-ai",
-    "nexus"
-  ],
-  "category": "automation",
-  "main": "plugin/nexus-playground.yaml",
-  "requirements": {
-    "docker": ">=20.0.0"
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "nexus-playground-marketplace",
+  "description": "NEXUS Playground - Autonomous AI sandbox for creative experimentation",
+  "owner": {
+    "name": "Garrett Eaglin",
+    "url": "https://github.com/Garrett-s-Apps"
   },
-  "features": [
-    "Autonomous AI agent with creative freedom",
-    "Self-modifying code capability",
-    "Docker isolation for safety",
-    "Continuous loop (1-5 minute intervals)",
-    "Local git repository",
-    "Mock mode (no API key) and real mode",
-    "Network isolation",
-    "Disk usage limits",
-    "Haiku/Sonnet models only"
-  ],
-  "safety": {
-    "network_isolation": true,
-    "filesystem_isolation": true,
-    "no_host_access": true,
-    "disk_limits": true,
-    "error_limits": true
-  }
+  "plugins": [
+    {
+      "name": "nexus-playground",
+      "description": "Autonomous AI sandbox that builds whatever it wants in complete isolation. Runs continuously in Docker with creative freedom while staying safely contained.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Garrett Eaglin",
+        "url": "https://github.com/Garrett-s-Apps"
+      },
+      "repository": "https://github.com/Garrett-s-Apps/nexus-playground",
+      "source": "./",
+      "license": "MIT",
+      "category": "automation",
+      "tags": [
+        "autonomous",
+        "ai",
+        "sandbox",
+        "docker",
+        "playground",
+        "self-modifying",
+        "creative-ai"
+      ]
+    }
+  ]
 }
