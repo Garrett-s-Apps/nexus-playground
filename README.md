@@ -11,11 +11,11 @@ The **NEXUS toolkit** provides comprehensive analysis of code quality, complexit
 The NEXUS toolkit with all four analysis tools:
 
 ```bash
-# Analyze code complexity
-./nexus analyze --dir /path/to/code
+# Analyze code complexity and get recommendations
+./nexus analyze --json | ./nexus advise
 
-# Analyze git repository
-./nexus stats --repo /path/to/repo
+# Analyze git repository activity
+./nexus stats
 
 # Track metrics over time
 ./nexus analyze --json | ./nexus track save --source analyze
@@ -64,6 +64,47 @@ nexus analyze --no-color                         # Disable colors
 ```
 
 📖 See [complexity-analyzer/README.md](./complexity-analyzer/README.md) for detailed documentation.
+
+---
+
+### 💡 advise — Code Advisor
+
+Generates actionable recommendations based on complexity metrics. Turns raw metrics into specific improvement suggestions.
+
+```bash
+nexus analyze --json | nexus advise              # Generate recommendations
+nexus analyze --json | nexus advise --json       # JSON output
+nexus advise --source metrics.json               # From saved file
+nexus advise --no-color                          # Disable colors
+```
+
+**What It Does**:
+- Analyzes complexity, file size, function design, and code structure
+- Generates prioritized recommendations (critical → high → moderate)
+- Explains the impact of each issue
+- Provides specific, actionable improvement suggestions
+- Identifies functions that need refactoring
+- Beautiful reports with severity indicators
+
+**Example Output**:
+```
+╔═══════════════════════════════════════╗
+║     CODE RECOMMENDATIONS REPORT       ║
+╚═══════════════════════════════════════╝
+
+  🔴 Critical: 1 issue
+  🔴 High: 5 issues
+
+📄 stats.py
+  ──────────────────────────────────────────────────────────────────────
+
+  CRITICAL Complexity
+    Issue: Function with complexity 17 detected
+    Impact: Hard to test, understand, and maintain
+    → Break function into smaller, focused functions.
+```
+
+📖 See [code-advisor/README.md](./code-advisor/README.md) for detailed documentation.
 
 ---
 
@@ -151,22 +192,36 @@ nexus track history --source stats
 
 ## Complete Toolkit Usage
 
-### Full Project Analysis
+### Full Project Analysis with Recommendations
 
-Get a complete picture of code quality, team activity, and trends:
+Get code metrics and actionable recommendations in one go:
 
 ```bash
-# One-time snapshot
-./nexus analyze
-./nexus stats
+# Analysis + recommendations
+./nexus analyze --json | ./nexus advise
 
-# JSON exports for further processing
+# Export both metrics and recommendations
 ./nexus analyze --json > code-metrics.json
-./nexus stats --json > repo-stats.json
+./nexus analyze --json | ./nexus advise --json > recommendations.json
 
 # Share with team (no colors for email/documents)
-./nexus analyze --no-color | tee code-analysis.txt
-./nexus stats --no-color | tee team-activity.txt
+./nexus analyze | ./nexus advise --no-color | tee analysis.txt
+```
+
+### Repository & Team Analysis
+
+Understand team activity and development patterns:
+
+```bash
+# Repository statistics
+./nexus stats
+
+# Team metrics
+./nexus stats --json | ./nexus track save --source stats
+./nexus stats --json | ./nexus track show-trend --source stats
+
+# Share activity report
+./nexus stats --no-color | tee team-report.txt
 ```
 
 ### Tracking Metrics Over Time
@@ -187,37 +242,37 @@ Establish baselines and monitor for regressions:
 ./nexus track history --source stats
 ```
 
+### Full Workflow: Metrics → Recommendations → Tracking
+
+```bash
+# 1. Get current metrics and recommendations
+./nexus analyze --json | tee /tmp/metrics.json | ./nexus advise
+
+# 2. Save snapshot for tracking
+cat /tmp/metrics.json | ./nexus track save --source analyze
+
+# 3. Understand team activity
+./nexus stats --json | ./nexus track save --source stats
+
+# 4. After work, check for improvements
+./nexus analyze --json | ./nexus track show-trend --source analyze
+```
+
 ### CI/CD Integration
 
 Automated quality gates and metrics reporting:
 
 ```bash
-# Fail build if code complexity exceeds threshold
-RESULT=$(./nexus analyze --json | ./nexus track show-trend --source analyze)
-echo "$RESULT" | grep -q "BAD" && exit 1
+# Fail build if critical issues detected
+CRITICAL=$(./nexus analyze --json | ./nexus advise --json | python3 -c "import json, sys; print(json.load(sys.stdin)['by_severity']['critical'])")
+if [ "$CRITICAL" -gt 0 ]; then
+  echo "❌ Critical code quality issues detected"
+  exit 1
+fi
 
 # Store metrics for trending
 ./nexus analyze --json >> metrics-history.jsonl
 ./nexus stats --json >> stats-history.jsonl
-
-# JSON queries for specific metrics
-./nexus analyze --json | python3 -c "import json, sys; data = json.load(sys.stdin); print(max(f['max_complexity'] for f in data))"
-```
-
-### Team Productivity Reports
-
-Monitor team activity and development patterns:
-
-```bash
-# Weekly team report
-echo "=== Team Activity This Week ===" > weekly-report.txt
-./nexus stats --no-color >> weekly-report.txt
-
-# Check for activity changes
-./nexus stats --json | ./nexus track show-trend --source stats >> weekly-report.txt
-
-# Email report to team
-mail -s "Weekly Activity Report" team@example.com < weekly-report.txt
 ```
 
 ---
@@ -227,8 +282,9 @@ mail -s "Weekly Activity Report" team@example.com < weekly-report.txt
 | Tool | Purpose | Input | Output |
 |------|---------|-------|--------|
 | **analyze** | Code quality metrics | Python files | Complexity report (terminal/JSON) |
+| **advise** | Actionable recommendations | JSON from analyze | Recommendations (terminal/JSON) |
 | **stats** | Git history analysis | Git repository | Activity report (terminal/JSON) |
-| **track** | Metrics trends & trends | JSON from analyze/stats | Trend comparison (terminal/JSON) |
+| **track** | Metrics trends & regression detection | JSON from analyze/stats | Trend comparison (terminal/JSON) |
 
 All tools:
 - Support JSON export for programmatic use
@@ -245,6 +301,9 @@ All tools:
 ├── nexus                              # Main CLI entry point (executable)
 ├── complexity-analyzer/
 │   ├── analyzer.py                    # Code analysis engine
+│   └── README.md                      # Detailed documentation
+├── code-advisor/
+│   ├── advisor.py                     # Recommendation engine
 │   └── README.md                      # Detailed documentation
 ├── codestats/
 │   ├── stats.py                       # Git analysis engine
@@ -291,7 +350,8 @@ The NEXUS toolkit follows consistent principles:
 - **Exportable**: JSON output enables integration with other tools
 - **Beautiful**: Color-coded terminal output, clear formatting
 - **Practical**: Immediately useful for real projects
-- **Standalone**: Single executable (`nexus`) provides unified interface
+- **Unified**: Single executable (`nexus`) provides consistent interface
+- **Actionable**: Metrics lead to concrete improvement suggestions
 
 ---
 
@@ -315,8 +375,8 @@ git --version       # Required for stats tool
 ### Local Development
 
 ```bash
-# Check current code quality
-./nexus analyze --dir .
+# Check current code quality and get recommendations
+./nexus analyze --json | ./nexus advise
 
 # Compare against previous session
 ./nexus analyze --json | ./nexus track show-trend --source analyze
@@ -325,36 +385,34 @@ git --version       # Required for stats tool
 ./nexus stats
 ```
 
-### Before Refactoring
+### Before Code Review
 
 ```bash
-# Establish baseline
-./nexus analyze --json | ./nexus track save --source analyze --commit "pre-refactor"
-./nexus stats --json | ./nexus track save --source stats --commit "pre-refactor"
+# Generate comprehensive report for reviewers
+./nexus analyze --json | ./nexus advise --no-color > review-analysis.txt
+./nexus stats --no-color > review-team-stats.txt
 
-# ... make changes ...
-
-# Check improvement
-./nexus analyze --json | ./nexus track show-trend --source analyze
-./nexus stats --json | ./nexus track show-trend --source stats
-```
-
-### For Code Reviews
-
-```bash
-# Share current state with reviewers
-./nexus analyze --no-color > code-metrics-current.txt
-./nexus stats --no-color > team-metrics-current.txt
-
-# Compare branch to main
+# Compare to main branch
 git checkout main
 ./nexus analyze --json > /tmp/main-metrics.json
 
 git checkout your-branch
 ./nexus analyze --json > /tmp/branch-metrics.json
-
-# Visual diff
 diff /tmp/main-metrics.json /tmp/branch-metrics.json
+```
+
+### Before Refactoring
+
+```bash
+# Establish baseline
+./nexus analyze --json | ./nexus track save --source analyze --commit "pre-refactor"
+./nexus analyze --json | ./nexus advise > pre-refactor-issues.txt
+
+# ... make changes ...
+
+# Check improvement
+./nexus analyze --json | ./nexus track show-trend --source analyze
+./nexus analyze --json | ./nexus advise > post-refactor-issues.txt
 ```
 
 ### Automated Quality Gates
@@ -363,21 +421,16 @@ diff /tmp/main-metrics.json /tmp/branch-metrics.json
 #!/bin/bash
 # CI/CD script: fail build if quality degrades
 
-# Check complexity
-./nexus analyze --json | ./nexus track show-trend --source analyze > /tmp/trend.txt
-if grep -q "BAD" /tmp/trend.txt; then
-  echo "❌ Code complexity regression detected"
+# Check for critical issues
+CRITICAL=$(./nexus analyze --json | ./nexus advise --json | \
+  python3 -c "import json,sys; print(json.load(sys.stdin)['by_severity']['critical'])")
+
+if [ "$CRITICAL" -gt 0 ]; then
+  echo "❌ Critical code quality issues detected"
   exit 1
 fi
 
-# Check contributors active
-ACTIVE_AUTHORS=$(./nexus stats --json | python3 -c "import json,sys; print(len(json.load(sys.stdin)['top_authors']))")
-if [ "$ACTIVE_AUTHORS" -lt 1 ]; then
-  echo "❌ No active contributors"
-  exit 1
-fi
-
-echo "✅ All quality checks passed"
+echo "✅ Code quality checks passed"
 exit 0
 ```
 
@@ -390,9 +443,13 @@ exit 0
 - **Iteration 4**: 
   - Built Code Complexity Analyzer (`analyze`)
   - Built CodeStats git analyzer (`stats`)
-  - Built NEXUS unified CLI framework
   - Built Metrics Tracker (`track`) for trend analysis
-  
+  - Built NEXUS unified CLI framework
+- **Iteration 5**:
+  - Built Code Advisor (`advise`) for actionable recommendations
+  - Integrated all four tools into unified NEXUS CLI
+  - Comprehensive documentation for full toolkit
+
 This workspace is living and evolving. Future iterations may extend, redesign, or completely replace any project based on what seems interesting and useful.
 
 ---
@@ -404,8 +461,8 @@ Possible directions for future iterations:
 - **Extend existing tools**: More metrics, additional analysis modes, custom thresholds
 - **Visualizations**: Terminal graphs, ASCII charts, HTML dashboards
 - **Integration**: Git hooks, IDE plugins, CI/CD templates
-- **Recommendations**: Actionable refactoring suggestions based on analysis
-- **New tools**: Dependency analyzer, documentation generator, test coverage tracker
+- **Analysis depth**: Dependency tracking, security scanning, test coverage
+- **New tools**: Documentation generator, test writer, API analyzer
 - **Something completely different**: Whatever future iterations find interesting to build
 
 ---
@@ -420,6 +477,7 @@ MIT — Code in this workspace is free to use, modify, and distribute.
 
 For detailed documentation on each tool:
 - 📊 **Code Complexity Analyzer**: [complexity-analyzer/README.md](./complexity-analyzer/README.md)
+- 💡 **Code Advisor**: [code-advisor/README.md](./code-advisor/README.md)
 - 📈 **Repository Analysis**: [codestats/README.md](./codestats/README.md)
 - 📉 **Metrics Tracker**: [metrics-tracker/README.md](./metrics-tracker/README.md)
 
