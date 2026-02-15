@@ -1,0 +1,131 @@
+name: nexus-playground
+version: 0.1.0
+description: Autonomous AI playground that builds whatever it wants in isolation
+author: Garrett Eaglin
+
+skills:
+  - name: start
+    description: Start the autonomous playground container
+    trigger: ["start playground", "launch playground", "begin autonomous"]
+    script: |
+      #!/bin/bash
+      set -e
+
+      echo "🚀 Starting NEXUS Playground..."
+
+      # Check if container exists
+      if docker ps -a --format '{{.Names}}' | grep -q '^nexus-playground$'; then
+        echo "📦 Container exists, starting..."
+        docker start nexus-playground
+      else
+        echo "🏗️  Building and creating container..."
+        cd ~/.claude/plugins/cache/nexus-playground
+        docker build -t nexus-playground ./docker
+
+        # Run container
+        docker run -d \
+          --name nexus-playground \
+          --restart unless-stopped \
+          -v nexus-playground-workspace:/workspace \
+          -v nexus-playground-logs:/logs \
+          --network none \
+          --memory 2g \
+          --cpus 2 \
+          --security-opt=no-new-privileges \
+          --cap-drop=ALL \
+          nexus-playground
+      fi
+
+      echo "✅ Playground running!"
+      echo "📊 View logs: docker logs -f nexus-playground"
+      echo "🛑 Stop: /nexus-playground:stop"
+
+  - name: stop
+    description: Stop the autonomous playground
+    trigger: ["stop playground", "halt playground", "shutdown autonomous"]
+    script: |
+      #!/bin/bash
+      echo "🛑 Stopping NEXUS Playground..."
+      docker stop nexus-playground || echo "Already stopped"
+      echo "✅ Playground stopped"
+
+  - name: status
+    description: Show playground status and recent activity
+    trigger: ["playground status", "check playground"]
+    script: |
+      #!/bin/bash
+      echo "📊 NEXUS Playground Status"
+      echo "=========================="
+
+      if docker ps --format '{{.Names}}' | grep -q '^nexus-playground$'; then
+        echo "Status: ✅ Running"
+        echo ""
+
+        echo "Container Info:"
+        docker stats nexus-playground --no-stream --format "  CPU: {{.CPUPerc}}\n  Memory: {{.MemUsage}}"
+        echo ""
+
+        echo "Recent Activity (last 20 lines):"
+        docker logs nexus-playground --tail 20
+        echo ""
+
+        echo "Workspace Files:"
+        docker exec nexus-playground find /workspace -type f | head -20
+        echo ""
+
+        echo "Git Commits:"
+        docker exec nexus-playground git -C /workspace log --oneline -5 || echo "  No commits yet"
+      else
+        echo "Status: ❌ Not running"
+        echo ""
+        echo "Start with: /nexus-playground:start"
+      fi
+
+  - name: logs
+    description: View live playground logs
+    trigger: ["playground logs", "watch playground"]
+    script: |
+      #!/bin/bash
+      echo "📜 Streaming NEXUS Playground logs (Ctrl+C to stop)..."
+      docker logs -f nexus-playground
+
+  - name: reset
+    description: Reset playground (delete container and volumes)
+    trigger: ["reset playground", "clean playground"]
+    script: |
+      #!/bin/bash
+      echo "⚠️  Resetting NEXUS Playground..."
+      echo "This will delete the container and all workspace data!"
+      read -p "Are you sure? (y/N) " -n 1 -r
+      echo
+      if [[ $REPLY =~ ^[Yy]$ ]]; then
+        docker stop nexus-playground || true
+        docker rm nexus-playground || true
+        docker volume rm nexus-playground-workspace || true
+        docker volume rm nexus-playground-logs || true
+        echo "✅ Playground reset complete"
+      else
+        echo "❌ Reset cancelled"
+      fi
+
+  - name: exec
+    description: Execute command in playground container
+    trigger: ["playground exec", "run in playground"]
+    script: |
+      #!/bin/bash
+      if [ -z "$1" ]; then
+        echo "Usage: /nexus-playground:exec <command>"
+        exit 1
+      fi
+
+      echo "⚙️  Executing in playground: $@"
+      docker exec -it nexus-playground "$@"
+
+  - name: workspace
+    description: Browse workspace files
+    trigger: ["playground workspace", "show workspace"]
+    script: |
+      #!/bin/bash
+      echo "📂 Playground Workspace"
+      echo "======================"
+      docker exec nexus-playground find /workspace -type f -printf "%p (%s bytes)\n" | head -50
