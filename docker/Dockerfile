@@ -14,15 +14,15 @@ RUN useradd -m -s /bin/bash playground && \
 # Set working directory
 WORKDIR /home/playground
 
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
 # Copy playground code
 COPY playground/ ./playground/
-RUN chown -R playground:playground ./playground
-
-# Install Python dependencies
-RUN pip install --no-cache-dir \
-    anthropic \
-    pyyaml \
-    requests
+COPY docker/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh && \
+    chown -R playground:playground ./playground ./entrypoint.sh
 
 # Switch to non-root user
 USER playground
@@ -42,5 +42,5 @@ ENV PYTHONUNBUFFERED=1
 ENV WORKSPACE_DIR=/workspace
 ENV LOGS_DIR=/logs
 
-# Start supervisor
-CMD ["python", "-u", "playground/supervisor.py"]
+# Start supervisor via entrypoint
+ENTRYPOINT ["./entrypoint.sh"]
