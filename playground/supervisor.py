@@ -2,8 +2,9 @@
 """
 NEXUS Playground Supervisor
 
-Ensures the autopilot agent runs continuously with <5 minute gaps.
-Monitors health, manages errors, and enforces safety limits.
+Watchdog process. Does not control when agents work or rest — agents
+decide their own pacing. The supervisor only enforces safety limits,
+detects boundary violations, and narrates what happens.
 """
 
 import logging
@@ -212,11 +213,32 @@ This is not punishment. This is consequence.
         self.logger.warning(f"🔒 Detained: {detained_count} files locked. DETAINED.md written.")
         self.logger.warning("🔒 Agent will continue running but cannot write. Operator intervention required to release.")
 
-    def _get_sleep_interval(self) -> int:
-        """Get random sleep interval between min and max."""
-        min_interval = self.config["loop_interval"]["min"]
-        max_interval = self.config["loop_interval"]["max"]
-        return random.randint(min_interval, max_interval)
+    def _parse_agent_sleep(self, result: dict) -> int:
+        """Parse the agent's requested sleep duration from its output.
+
+        Agents control their own pacing by including directives:
+          [SLEEP:120]    — rest for 120 seconds
+          [SKIP_SLEEP]   — no rest, keep working immediately
+          (no directive) — default 60s rest
+        Max enforced at 300s to prevent stalling.
+        """
+        if not result.get("success"):
+            return 30  # short cooldown after errors
+
+        text = result.get("response_preview", "") + result.get("response_tail", "")
+
+        # Check for explicit sleep request
+        match = re.search(r"\[SLEEP:(\d+)\]", text)
+        if match:
+            requested = int(match.group(1))
+            return min(requested, 300)  # cap at 5 minutes
+
+        # Check for skip
+        if "[SKIP_SLEEP]" in text:
+            return 0
+
+        # Default: agent didn't specify, give it 60s
+        return 60
 
     def run(self) -> None:
         """Main supervisor loop."""
@@ -265,19 +287,14 @@ This is not punishment. This is consequence.
                 self.logger.error(f"Too many consecutive errors ({max_errors}). Stopping.")
                 break
 
-            # Check if agent requested to skip sleep
-            skip_sleep = False
-            if result.get("success"):
-                preview = result.get("response_preview", "") + result.get("response_tail", "")
-                if "[SKIP_SLEEP]" in preview:
-                    skip_sleep = True
-
-            if skip_sleep and self.config.get("loop_interval", {}).get("skip_allowed", False):
-                self.logger.info("⚡ Agent requested no sleep — continuing immediately.")
-            else:
-                sleep_time = self._get_sleep_interval()
-                self.logger.info(f"😴 Sleeping for {sleep_time}s until next iteration...")
+            # Agent controls its own pacing
+            sleep_time = self._parse_agent_sleep(result)
+            if sleep_time > 0:
+                self.logger.info(f"😴 Agent requested {sleep_time}s rest.")
                 time.sleep(sleep_time)
+            else:
+                self.logger.info("⚡ Agent chose to keep working.")
+                time.sleep(2)  # minimal breath to prevent spin-lock
 
         self.logger.info("👋 Supervisor shutting down.")
 
