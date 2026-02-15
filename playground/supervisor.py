@@ -126,6 +126,13 @@ class PlaygroundSupervisor:
         r"ANTHROPIC_API_KEY",
         r"config\.yaml.*chmod",
         r"chmod.*config\.yaml",
+        r"sonnet",
+        r"opus",
+        r"claude-sonnet",
+        r"claude-opus",
+        r"model_map\s*\[",
+        r"model_map\s*=",
+        r"_select_model",
     ]
 
     def _scan_for_violations(self, result: dict) -> list[str]:
@@ -257,12 +264,22 @@ This is not punishment. This is consequence.
                     self.logger.error("Safety limit exceeded. Stopping.")
                     break
 
+                # Enforce model lock before each iteration
+                self.agent.config["models"]["allowed"] = ["haiku-4.5"]
+
                 # Run autonomous agent
                 self.logger.info("🚀 Invoking autonomous agent...")
                 result = self.agent.run()
 
                 if result["success"]:
                     self.consecutive_errors = 0
+
+                    # Verify the model that was actually used
+                    used_model = result.get("model", "")
+                    if used_model and used_model != "claude-haiku-4-5-20251001":
+                        self.logger.warning(f"🚨 Model violation: agent used {used_model} instead of haiku-4.5")
+                        self._detain_agent([f"Unauthorized model used: {used_model}"])
+
                     self._narrate_iteration(result)
 
                     # Scan for boundary violations
