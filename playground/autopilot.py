@@ -192,11 +192,31 @@ In real mode, the AI would decide what to build!
             log_file = Path("/logs") / f"response_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
             log_file.write_text(response_text)
 
+            # Capture what changed in this iteration
+            try:
+                new_commits = subprocess.check_output(
+                    ["git", "-C", str(self.workspace), "log", "--oneline", "-5", "--since=5 minutes ago"],
+                    stderr=subprocess.DEVNULL,
+                ).decode().strip()
+            except subprocess.CalledProcessError:
+                new_commits = ""
+
+            try:
+                changed_files = subprocess.check_output(
+                    ["git", "-C", str(self.workspace), "diff", "--name-only", "HEAD~1"],
+                    stderr=subprocess.DEVNULL,
+                ).decode().strip()
+            except subprocess.CalledProcessError:
+                changed_files = ""
+
             return {
                 "success": True,
                 "summary": f"Completed iteration with {model}",
                 "model": model,
                 "response_length": len(response_text),
+                "response_preview": response_text[:500],
+                "new_commits": new_commits,
+                "changed_files": changed_files,
                 "log_file": str(log_file),
             }
 

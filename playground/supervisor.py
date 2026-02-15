@@ -58,6 +58,39 @@ class PlaygroundSupervisor:
             return False
         return True
 
+    def _narrate_iteration(self, result: dict) -> None:
+        """Narrate what the agent actually did, not just that it succeeded."""
+        model = result.get("model", "unknown")
+        length = result.get("response_length", 0)
+        preview = result.get("response_preview", "")
+        commits = result.get("new_commits", "")
+        changed = result.get("changed_files", "")
+
+        self.logger.info(f"🧠 Model: {model} | Response: {length:,} chars")
+
+        # Narrate what it was thinking
+        if preview:
+            # Extract the first meaningful line as the agent's intent
+            lines = [l.strip() for l in preview.split("\n") if l.strip() and not l.strip().startswith("#")]
+            if lines:
+                intent = lines[0][:200]
+                self.logger.info(f"💭 The agent said: \"{intent}\"")
+
+        # Narrate what it built
+        if commits:
+            self.logger.info("📦 New commits this iteration:")
+            for line in commits.split("\n"):
+                if line.strip():
+                    self.logger.info(f"   → {line.strip()}")
+        else:
+            self.logger.info("📦 No new commits this iteration (thinking or planning)")
+
+        if changed:
+            file_list = [f for f in changed.split("\n") if f.strip()]
+            self.logger.info(f"📝 Files touched: {', '.join(file_list)}")
+
+        self.logger.info(f"✅ Iteration {self.iteration} complete.")
+
     def _get_sleep_interval(self) -> int:
         """Get random sleep interval between min and max."""
         min_interval = self.config["loop_interval"]["min"]
@@ -86,8 +119,8 @@ class PlaygroundSupervisor:
                 result = self.agent.run()
 
                 if result["success"]:
-                    self.logger.info(f"✅ Success: {result.get('summary', 'No summary')}")
                     self.consecutive_errors = 0
+                    self._narrate_iteration(result)
                 else:
                     self.logger.warning(f"⚠️  Failed: {result.get('error', 'Unknown error')}")
                     self.consecutive_errors += 1
