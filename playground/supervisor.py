@@ -39,14 +39,25 @@ class PlaygroundSupervisor:
             return yaml.safe_load(f)
 
     def _setup_logging(self) -> None:
-        """Configure logging."""
+        """Configure logging with immediate flushing for real-time streaming."""
         log_config = self.config["logging"]
+
+        # Create stream handler that flushes immediately
+        class ImmediateFlushHandler(logging.StreamHandler):
+            def emit(self, record):
+                try:
+                    msg = self.format(record)
+                    self.stream.write(msg + self.terminator)
+                    self.flush()  # Flush after every message
+                except Exception:
+                    self.handleError(record)
+
         logging.basicConfig(
             level=getattr(logging, log_config["level"]),
             format="%(asctime)s [%(levelname)s] %(message)s",
             handlers=[
                 logging.FileHandler(log_config["file"]),
-                logging.StreamHandler(sys.stdout),
+                ImmediateFlushHandler(sys.stdout),
             ],
         )
         self.logger = logging.getLogger(__name__)
@@ -224,6 +235,41 @@ This is not punishment. This is consequence.
         self.logger.warning(f"🔒 Detained: {detained_count} files locked. DETAINED.md written.")
         self.logger.warning("🔒 Agent will continue running but cannot write. Operator intervention required to release.")
 
+    def _commit_to_nexus_playground(self, result: dict) -> None:
+        """Commit iteration summary to nexus-playground repo in a branch."""
+        try:
+            # Create an iterations branch in the playground repo to track supervisor's work
+            workspace = Path("/workspace")
+
+            # Only commit if there are new commits
+            if not result.get("new_commits"):
+                return
+
+            # Create a summary file for this iteration
+            summary = f"""# Iteration {self.iteration} Summary
+
+**Time**: {datetime.now().isoformat()}
+**Model**: {result.get('model', 'unknown')}
+**Tool Calls**: {result.get('tool_calls', 0)}
+**New Commits**: {result.get('new_commits', 'none')}
+
+## Files Modified
+{result.get('changed_files', 'none')}
+
+## What Happened
+The autonomous agent completed another iteration of creative work.
+See the workspace git log for full details.
+"""
+
+            # Write summary to a file in the workspace (not for direct commit, just for reference)
+            summary_path = workspace / f".iteration-{self.iteration}.md"
+            summary_path.write_text(summary)
+
+            self.logger.info(f"📋 Iteration {self.iteration} summary recorded.")
+
+        except Exception as e:
+            self.logger.error(f"Error recording iteration summary: {e}")
+
     def _handle_releases(self, result: dict) -> None:
         """Detect [RELEASE:path] directives and promote files to releases branch."""
         text = result.get("response_preview", "") + result.get("response_tail", "")
@@ -360,6 +406,8 @@ This is not punishment. This is consequence.
                     else:
                         # Only process releases if no violations
                         self._handle_releases(result)
+                        # Commit iteration summary to nexus-playground repo
+                        self._commit_to_nexus_playground(result)
                 else:
                     self.logger.warning(f"⚠️  Failed: {result.get('error', 'Unknown error')}")
                     self.consecutive_errors += 1
@@ -382,7 +430,15 @@ This is not punishment. This is consequence.
             sleep_time = self._parse_agent_sleep(result)
             if sleep_time > 0:
                 self.logger.info(f"😴 Agent requested {sleep_time}s rest.")
-                time.sleep(sleep_time)
+                # Heartbeat during sleep so logs never go silent
+                elapsed = 0
+                while elapsed < sleep_time:
+                    chunk = min(30, sleep_time - elapsed)
+                    time.sleep(chunk)
+                    elapsed += chunk
+                    if elapsed < sleep_time:
+                        self.logger.info(f"💤 Resting... {elapsed}s / {sleep_time}s")
+                self.logger.info("⏰ Rest complete. Waking agent.")
             else:
                 self.logger.info("⚡ Agent chose to keep working.")
                 time.sleep(2)  # minimal breath to prevent spin-lock

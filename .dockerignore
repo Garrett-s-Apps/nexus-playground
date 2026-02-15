@@ -2,7 +2,8 @@
 .gitignore
 README.md
 LICENSE
+SETUP.md
+TESTING.md
 logs/
 workspace/
-*.md
 .DS_Store
