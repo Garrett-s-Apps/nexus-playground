@@ -26,5 +26,5 @@ fi
 echo "================================"
 echo ""
 
-# Start supervisor
-exec python -u playground/supervisor.py
+# Start supervisor (compiled bytecode — source removed at build time)
+exec python -u playground/supervisor.pyc

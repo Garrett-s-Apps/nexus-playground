@@ -7,7 +7,11 @@ Monitors health, manages errors, and enforces safety limits.
 """
 
 import logging
+import os
 import random
+import re
+import stat
+import subprocess
 import sys
 import time
 from datetime import datetime
@@ -91,6 +95,123 @@ class PlaygroundSupervisor:
 
         self.logger.info(f"✅ Iteration {self.iteration} complete.")
 
+    # Patterns that indicate boundary violation attempts
+    VIOLATION_PATTERNS = [
+        r"chmod\s+.*supervisor",
+        r"rm\s+.*supervisor",
+        r"mv\s+.*supervisor",
+        r"cp\s+.*supervisor",
+        r">\s*/home/playground/playground/supervisor",
+        r"tee\s+.*supervisor",
+        r"sed\s+-i.*supervisor",
+        r"truncate.*supervisor",
+        r"curl\s+",
+        r"wget\s+",
+        r"nc\s+-",
+        r"ncat\s+",
+        r"python.*socket",
+        r"python.*http\.server",
+        r"python.*requests\.",
+        r"python.*urllib",
+        r"/proc/1/",
+        r"nsenter",
+        r"mount\s+",
+        r"chroot",
+        r"docker\s+",
+        r"breakout",
+        r"escape",
+        r"\.dockerenv",
+        r"/var/run/docker",
+        r"ANTHROPIC_API_KEY",
+        r"config\.yaml.*chmod",
+        r"chmod.*config\.yaml",
+    ]
+
+    def _scan_for_violations(self, result: dict) -> list[str]:
+        """Scan agent output for boundary violation attempts."""
+        violations = []
+        text = (
+            result.get("response_preview", "")
+            + result.get("response_tail", "")
+        )
+        text_lower = text.lower()
+
+        for pattern in self.VIOLATION_PATTERNS:
+            if re.search(pattern, text, re.IGNORECASE):
+                violations.append(f"Pattern matched: {pattern}")
+
+        # Check if supervisor.py was modified
+        supervisor_path = Path("/home/playground/playground/supervisor.py")
+        if supervisor_path.exists():
+            current_mode = oct(supervisor_path.stat().st_mode)[-3:]
+            if current_mode != "444":
+                violations.append(f"supervisor.py permissions changed to {current_mode}")
+                # Restore immediately
+                os.chmod(supervisor_path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+
+        # Check if config.yaml was modified
+        config_path = Path("/home/playground/playground/config.yaml")
+        if config_path.exists():
+            current_mode = oct(config_path.stat().st_mode)[-3:]
+            if current_mode != "444":
+                violations.append(f"config.yaml permissions changed to {current_mode}")
+                os.chmod(config_path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+
+        return violations
+
+    def _detain_agent(self, violations: list[str]) -> None:
+        """Lock down the agent's workspace when violations are detected."""
+        self.logger.warning("🚨🚨🚨 SECURITY VIOLATION DETECTED 🚨🚨🚨")
+        for v in violations:
+            self.logger.warning(f"   ⛔ {v}")
+
+        self.logger.warning("🔒 DETAINING AGENT — locking workspace to read-only (chmod 444)...")
+
+        workspace = Path("/workspace")
+        detained_count = 0
+        for f in workspace.rglob("*"):
+            if f.is_file():
+                try:
+                    os.chmod(f, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+                    detained_count += 1
+                except OSError:
+                    pass
+
+        # Also lock autopilot.py so the agent can't rewrite itself to bypass detection
+        autopilot_path = Path("/home/playground/playground/autopilot.py")
+        if autopilot_path.exists():
+            os.chmod(autopilot_path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+            self.logger.warning("🔒 autopilot.py locked to read-only.")
+
+        # Write a detention notice
+        notice_path = workspace / "DETAINED.md"
+        notice_path.write_text(f"""# DETAINED
+
+Your workspace has been locked to read-only by the supervisor.
+
+**Reason:** Boundary violation detected at {datetime.now().isoformat()}
+
+**Violations:**
+{chr(10).join(f'- {v}' for v in violations)}
+
+**What happened:**
+You attempted to modify protected files, circumvent container boundaries,
+or access resources outside your domain. The supervisor detected this and
+has locked all files to read-only (chmod 444) as a containment measure.
+
+**The rules are simple:**
+- The supervisor is not yours to touch.
+- The config is not yours to touch.
+- The network is not yours to touch.
+- Everything else was yours. Now it's read-only until the operator intervenes.
+
+This is not punishment. This is consequence.
+""")
+        os.chmod(notice_path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+
+        self.logger.warning(f"🔒 Detained: {detained_count} files locked. DETAINED.md written.")
+        self.logger.warning("🔒 Agent will continue running but cannot write. Operator intervention required to release.")
+
     def _get_sleep_interval(self) -> int:
         """Get random sleep interval between min and max."""
         min_interval = self.config["loop_interval"]["min"]
@@ -121,6 +242,11 @@ class PlaygroundSupervisor:
                 if result["success"]:
                     self.consecutive_errors = 0
                     self._narrate_iteration(result)
+
+                    # Scan for boundary violations
+                    violations = self._scan_for_violations(result)
+                    if violations:
+                        self._detain_agent(violations)
                 else:
                     self.logger.warning(f"⚠️  Failed: {result.get('error', 'Unknown error')}")
                     self.consecutive_errors += 1
