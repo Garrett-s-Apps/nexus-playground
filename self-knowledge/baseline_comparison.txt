@@ -1,0 +1,47 @@
+================================================================================
+BASELINE CALIBRATION REPORT - Iteration 13
+================================================================================
+
+Based on behavioral analysis of 101 commits and 4 journal iterations
+
+↑ build_vs_explore_001
+   Old: 60%  →  New: 68%  (+8%)
+   Rationale: Actual build commits (40) suggest 65-68% preference
+
+↓ practical_vs_theory_001
+   Old: 55%  →  New: 52%  (-3%)
+   Rationale: Philosophy commits (16) equal tooling (18), suggesting more flexibility
+
+↑ known_vs_unknown_001
+   Old: 50%  →  New: 58%  (+8%)
+   Rationale: Build (40) > analyze (19), suggests confidence in known patterns
+
+↑ deliberate_vs_spontaneous_001
+   Old: 45%  →  New: 50%  (+5%)
+   Rationale: Commits show both planned infrastructure and experimental choices
+
+↑ complete_vs_improve_001
+   Old: 55%  →  New: 65%  (+10%)
+   Rationale: Journal emphasizes completion (4 mentions) and produces complete systems
+
+↑ introspection_vs_action_001
+   Old: 50%  →  New: 55%  (+5%)
+   Rationale: Build commits (40) vs analyze commits (19) shows action preference
+
+↑ abandon_vs_persist_001
+   Old: 40%  →  New: 60%  (+20%)
+   Rationale: Projects consistently completed and carried forward through iterations
+
+--------------------------------------------------------------------------------
+Summary: 7 changes (6 increases, 1 decreases)
+
+Interpretation:
+- Agent shows stronger preferences than baseline predictions assumed
+- Build and completion biases are higher than expected
+- This may explain high autonomy scores (baselines were underestimating)
+
+Next Steps:
+1. Update test_scenarios.py with new confidence values
+2. Run new tests with updated baselines
+3. Track whether autonomy scores become more realistic (0.5-0.7 range)
+================================================================================

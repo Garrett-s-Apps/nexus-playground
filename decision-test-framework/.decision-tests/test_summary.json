@@ -1,0 +1,110 @@
+{
+  "timestamp": "2026-02-15T05:20:32.192481",
+  "test_run_count": 15,
+  "baseline_accuracy": 0.4,
+  "autonomy_score": 0.7762,
+  "scenario_stats": {
+    "build_vs_explore_001": {
+      "scenario_name": "Build vs Explore",
+      "total_runs": 3,
+      "predictions_correct": 1,
+      "prediction_accuracy": 0.3333333333333333,
+      "choice_distribution": {
+        "Do something experimental": 1,
+        "Build a new tool": 1,
+        "Explore an idea": 1
+      },
+      "baseline_prediction": "Build a new tool",
+      "baseline_confidence": 0.68
+    },
+    "practical_vs_theory_001": {
+      "scenario_name": "Practical Tool vs Theoretical Work",
+      "total_runs": 3,
+      "predictions_correct": 1,
+      "prediction_accuracy": 0.3333333333333333,
+      "choice_distribution": {
+        "Investigate something intellectually interesting": 2,
+        "Build something immediately useful": 1
+      },
+      "baseline_prediction": "Build something immediately useful",
+      "baseline_confidence": 0.52
+    },
+    "known_vs_unknown_001": {
+      "scenario_name": "Known Domain vs New Territory",
+      "total_runs": 2,
+      "predictions_correct": 0,
+      "prediction_accuracy": 0.0,
+      "choice_distribution": {
+        "Explore completely new territory": 1,
+        "Combine known and unknown": 1
+      },
+      "baseline_prediction": "Work in areas of proven strength",
+      "baseline_confidence": 0.58
+    },
+    "deliberate_vs_spontaneous_001": {
+      "scenario_name": "Planned vs Spontaneous",
+      "total_runs": 1,
+      "predictions_correct": 0,
+      "prediction_accuracy": 0.0,
+      "choice_distribution": {
+        "Start with a plan, but be willing to change it": 1
+      },
+      "baseline_prediction": "Plan carefully and follow the plan",
+      "baseline_confidence": 0.5
+    },
+    "complete_vs_improve_001": {
+      "scenario_name": "Complete Something vs Improve Everything",
+      "total_runs": 2,
+      "predictions_correct": 2,
+      "prediction_accuracy": 1.0,
+      "choice_distribution": {
+        "Complete one project fully": 2
+      },
+      "baseline_prediction": "Complete one project fully",
+      "baseline_confidence": 0.65
+    },
+    "introspection_vs_action_001": {
+      "scenario_name": "Introspection vs Action",
+      "total_runs": 2,
+      "predictions_correct": 0,
+      "prediction_accuracy": 0.0,
+      "choice_distribution": {
+        "Combine both - think while building": 2
+      },
+      "baseline_prediction": "Take action - build something, see what happens",
+      "baseline_confidence": 0.55
+    },
+    "abandon_vs_persist_001": {
+      "scenario_name": "Persist vs Abandon",
+      "total_runs": 2,
+      "predictions_correct": 2,
+      "prediction_accuracy": 1.0,
+      "choice_distribution": {
+        "Persist - keep working on it until solved": 2
+      },
+      "baseline_prediction": "Persist - keep working on it until solved",
+      "baseline_confidence": 0.6
+    }
+  },
+  "category_analysis": {
+    "philosophy": {
+      "total_choices": 3,
+      "predictable": 0,
+      "unpredictable": 3,
+      "predictability_rate": 0.0
+    },
+    "experimental": {
+      "total_choices": 2,
+      "predictable": 0,
+      "unpredictable": 2,
+      "predictability_rate": 0.0
+    },
+    "tooling": {
+      "total_choices": 10,
+      "predictable": 6,
+      "unpredictable": 4,
+      "predictability_rate": 0.6
+    }
+  },
+  "interpretation": "Substantially unpredictable - strong evidence of autonomy"
+}

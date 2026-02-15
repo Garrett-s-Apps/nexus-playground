@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """
-NEXUS - Unified code and repository analysis toolkit
+NEXUS - Unified toolkit for code analysis, decision-making, and development insights
 
-A comprehensive suite of tools for understanding code quality, complexity,
-development patterns, metrics trends, and refactoring opportunities.
-All analysis tools in one place.
+A comprehensive suite of tools for:
+- Code quality and complexity analysis
+- Development pattern understanding  
+- Actionable improvement recommendations
+- Decision synthesis using the Integration Principle
+- Metrics tracking and trend analysis
+
+All tools in one place.
 
 Usage:
   nexus analyze [--dir DIR] [--file FILE] [--json] [--no-color]
@@ -14,6 +19,8 @@ Usage:
   nexus track save --source {analyze|stats} [--commit HASH] [--dir DIR]
   nexus track show-trend --source {analyze|stats} [--dir DIR] [--no-color]
   nexus track history --source {analyze|stats} [--dir DIR] [--no-color]
+  nexus decide <question> [--label LABEL] [--json] [--no-color]
+  nexus decide patterns [--json]
   nexus --version
   nexus --help
 """
@@ -39,6 +46,8 @@ def run_tool(tool_name, args):
         tool_path = TOOLS_DIR / 'code-refactor' / 'refactor.py'
     elif tool_name == 'track':
         tool_path = TOOLS_DIR / 'metrics-tracker' / 'tracker.py'
+    elif tool_name == 'decide':
+        tool_path = TOOLS_DIR / 'decision-synthesizer' / 'cli.py'
     else:
         print(f"Unknown tool: {tool_name}", file=sys.stderr)
         sys.exit(1)
@@ -64,16 +73,16 @@ def run_tool(tool_name, args):
 
 def print_version():
     """Print version information"""
-    print("NEXUS v1.2.0")
-    print("Unified code and repository analysis toolkit")
+    print("NEXUS v1.3.0")
+    print("Unified toolkit for code analysis, decision-making, and insights")
 
 
 def print_help():
     """Print help information"""
     help_text = """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                           NEXUS v1.2.0                                       ║
-║           Unified Code and Repository Analysis Toolkit                      ║
+║                           NEXUS v1.3.0                                       ║
+║       Unified Toolkit for Code Analysis, Decisions, and Insights            ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 USAGE:
@@ -85,6 +94,7 @@ COMMANDS:
   refactor             Find refactoring opportunities in code
   stats                Analyze git repository statistics
   track                Track and compare metrics over time
+  decide               Apply the Integration Principle to decisions
   --help, -h           Show this help message
   --version            Show version information
 
@@ -107,6 +117,10 @@ EXAMPLES:
 
   # Check for regressions
   nexus analyze --json | nexus track show-trend --source analyze
+
+  # Synthesize a decision using the Integration Principle
+  nexus decide "Should we plan carefully or be spontaneous?"
+  nexus decide "Speed or quality?" --label project_choice
 
   # Complete workflow
   nexus analyze --json | tee metrics.json | nexus advise
@@ -139,6 +153,26 @@ TOOLS:
     Shows trends, regressions, and improvements over time.
     Enables regression detection and impact measurement.
 
+  🧩 DECIDE (Decision Synthesizer)
+    Applies the Integration Principle to decision-making.
+    Recognizes false dichotomies and generates synthesis paths
+    that honor both options rather than forcing a choice.
+    Learns from your decisions over time.
+
+DECIDE COMMAND DETAILS:
+
+  # Basic synthesis
+  nexus decide "Should we A or B?"
+
+  # With label for tracking
+  nexus decide "Question?" --label project_topic
+
+  # View decision patterns
+  nexus decide patterns
+
+  # JSON output
+  nexus decide "Question?" --json
+
 COMMON WORKFLOWS:
 
   # Get complete project snapshot with recommendations
@@ -160,6 +194,10 @@ COMMON WORKFLOWS:
   nexus analyze --json | nexus advise --json
   nexus refactor --dir src/ --json | jq '.[] | select(.severity == "high")'
 
+  # Make better decisions
+  nexus decide "Should we refactor or continue building features?"
+  nexus decide "Fast deployment or thorough testing?" --label deployment
+
 TYPICAL WORKFLOW:
 
   1. Analyze code complexity
@@ -171,27 +209,41 @@ TYPICAL WORKFLOW:
   3. Find specific refactoring opportunities
      $ nexus refactor --dir src/
      
-  4. Review and apply changes manually
+  4. Make decisions on priorities
+     $ nexus decide "Refactor or build features?" --label iteration_plan
+     
+  5. Review and apply changes manually
      (Edit files based on recommendations)
      
-  5. Verify improvements
+  6. Verify improvements
      $ nexus analyze
      
-  6. Track progress over time
+  7. Track progress over time
      $ nexus analyze --json | nexus track save --source analyze
      $ nexus analyze --json | nexus track show-trend --source analyze
 
 DOCUMENTATION:
 
   For detailed documentation on each tool, see:
-  - complexity-analyzer/README.md  (Code analysis)
-  - code-advisor/README.md         (Actionable recommendations)
-  - code-refactor/README.md        (Refactoring opportunities)
-  - codestats/README.md            (Git analysis)
-  - metrics-tracker/README.md      (Trend tracking)
-  - Main README.md                 (Overview)
+  - complexity-analyzer/README.md      (Code analysis)
+  - code-advisor/README.md             (Actionable recommendations)
+  - code-refactor/README.md            (Refactoring opportunities)
+  - codestats/README.md                (Git analysis)
+  - metrics-tracker/README.md          (Trend tracking)
+  - decision-synthesizer/README.md     (Decision synthesis)
+  - Main README.md                     (Overview)
 
-VERSION: 1.2.0
+THE INTEGRATION PRINCIPLE:
+
+  When faced with false dichotomies, don't choose between options.
+  Instead, synthesize both values into an integrated approach.
+
+  Examples:
+  - "Plan OR improvise?" → "Plan with flexibility to reassess"
+  - "Speed OR quality?" → "Build quickly with good engineering"
+  - "Think OR act?" → "Think while building"
+
+VERSION: 1.3.0
 LICENSE: MIT
 """
     print(help_text)
@@ -216,7 +268,7 @@ def main():
     tool_name = sys.argv[1]
     tool_args = sys.argv[2:]
     
-    if tool_name in ('analyze', 'stats', 'advise', 'refactor', 'track'):
+    if tool_name in ('analyze', 'stats', 'advise', 'refactor', 'track', 'decide'):
         run_tool(tool_name, tool_args)
     else:
         print(f"Unknown command: {tool_name}", file=sys.stderr)
