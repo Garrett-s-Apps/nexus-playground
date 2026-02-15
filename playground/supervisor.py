@@ -39,14 +39,25 @@ class PlaygroundSupervisor:
             return yaml.safe_load(f)
 
     def _setup_logging(self) -> None:
-        """Configure logging."""
+        """Configure logging with immediate flushing for real-time streaming."""
         log_config = self.config["logging"]
+
+        # Create stream handler that flushes immediately
+        class ImmediateFlushHandler(logging.StreamHandler):
+            def emit(self, record):
+                try:
+                    msg = self.format(record)
+                    self.stream.write(msg + self.terminator)
+                    self.flush()  # Flush after every message
+                except Exception:
+                    self.handleError(record)
+
         logging.basicConfig(
             level=getattr(logging, log_config["level"]),
             format="%(asctime)s [%(levelname)s] %(message)s",
             handlers=[
                 logging.FileHandler(log_config["file"]),
-                logging.StreamHandler(sys.stdout),
+                ImmediateFlushHandler(sys.stdout),
             ],
         )
         self.logger = logging.getLogger(__name__)
