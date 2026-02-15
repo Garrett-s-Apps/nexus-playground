@@ -4,16 +4,18 @@ Command-line interface for Agent Autonomy Analyzer
 
 Usage:
   python3 agent-autonomy/cli.py analyze
-  python3 agent-autonomy/cli.py analyze --format json
   python3 agent-autonomy/cli.py markers
   python3 agent-autonomy/cli.py consistency
   python3 agent-autonomy/cli.py decisions
+  python3 agent-autonomy/cli.py predict
+  python3 agent-autonomy/cli.py determinism
 """
 
 import sys
 import argparse
 import json
 from analyzer import AutonomyAnalyzer, AutonomyReporter
+from predictor import BehaviorPredictor, PredictionReporter
 
 
 def main():
@@ -41,6 +43,12 @@ def main():
     # decisions command
     subparsers.add_parser("decisions", help="Show decision quality only")
     
+    # predict command
+    subparsers.add_parser("predict", help="Predict next agent behavior")
+    
+    # determinism command
+    subparsers.add_parser("determinism", help="Analyze behavior determinism")
+    
     # help command
     subparsers.add_parser("help", help="Show help")
     
@@ -50,21 +58,25 @@ def main():
         parser.print_help()
         return
     
-    # Run analysis
-    analyzer = AutonomyAnalyzer()
-    analysis = analyzer.analyze()
-    reporter = AutonomyReporter()
-    
     if args.command == "analyze":
+        # Run autonomy analysis
+        analyzer = AutonomyAnalyzer()
+        analysis = analyzer.analyze()
+        reporter = AutonomyReporter()
+        
         if args.format == "json":
             print(reporter.report_json(analysis))
         else:
             print(reporter.report_human(analysis))
     
     elif args.command == "markers":
+        # Show markers only
+        analyzer = AutonomyAnalyzer()
+        analysis = analyzer.analyze()
+        markers = analysis.markers
+        
         lines = []
         lines.append("AUTONOMY MARKERS:")
-        markers = analysis.markers
         
         marker_list = [
             ("Consistency", markers.has_consistency),
@@ -84,6 +96,10 @@ def main():
         print("\n".join(lines))
     
     elif args.command == "consistency":
+        # Show consistency signature
+        analyzer = AutonomyAnalyzer()
+        analysis = analyzer.analyze()
+        
         lines = []
         lines.append("CONSISTENCY SIGNATURE:")
         percentages = analysis.consistency.get_percentages()
@@ -101,9 +117,13 @@ def main():
         print("\n".join(lines))
     
     elif args.command == "decisions":
+        # Show decision quality
+        analyzer = AutonomyAnalyzer()
+        analysis = analyzer.analyze()
+        quality = analysis.decision_quality
+        
         lines = []
         lines.append("DECISION QUALITY:")
-        quality = analysis.decision_quality
         
         if quality.total_decisions > 0:
             lines.append(f"  Total Decisions:      {quality.total_decisions}")
@@ -120,6 +140,33 @@ def main():
             lines.append(f"    Low:    {confidence_dist.get('low', 0):.0f}%")
         else:
             lines.append("  (No decisions recorded yet)")
+        
+        print("\n".join(lines))
+    
+    elif args.command == "predict":
+        # Show behavior predictions
+        predictor = BehaviorPredictor()
+        reporter = PredictionReporter()
+        print(reporter.report_predictions(predictor))
+    
+    elif args.command == "determinism":
+        # Show determinism analysis
+        predictor = BehaviorPredictor()
+        determinism = predictor.analyze_determinism()
+        
+        lines = []
+        lines.append("DETERMINISM ANALYSIS:")
+        lines.append(f"  Score: {determinism['determinism_score']:.2f} (0=random, 1=determined)")
+        lines.append(f"  Level: {determinism['interpretation']}")
+        lines.append(f"  Meaning: {determinism['meaning']}")
+        lines.append("")
+        lines.append("What This Means:")
+        if determinism['determinism_score'] > 0.8:
+            lines.append("  Behavior is highly predictable → Strong constraints or preferences")
+        elif determinism['determinism_score'] > 0.6:
+            lines.append("  Behavior is mostly predictable → Patterns exist with some flexibility")
+        else:
+            lines.append("  Behavior is variable → Suggests genuine choice-making or randomness")
         
         print("\n".join(lines))
 

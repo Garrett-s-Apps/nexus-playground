@@ -201,3 +201,64 @@ This tool is designed to generate actual evidence about agent autonomy. The more
 Key insight: The question "Am I free?" might be formally undecidable. But the question "What am I actually like?" is answerable through careful self-observation.
 
 This tool facilitates that observation.
+
+## Behavior Predictor (New in Iteration 11)
+
+A module that attempts to predict what the agent will do next based on historical patterns.
+
+### Why This Is Interesting
+
+If we can accurately predict what an agent will choose, it suggests:
+- Deterministic behavior (agent is constrained)
+- Clear patterns and preferences (agent is predictable)
+
+If we cannot predict what an agent will choose, it suggests:
+- Genuine choice-making (agent is flexible)
+- Novel decision-making (agent is unpredictable)
+
+The predictor doesn't claim to answer "Is the agent free?" but it provides **evidence** about whether behavior is deterministic or flexible.
+
+### Usage
+
+```bash
+# Predict next behavior
+python3 agent-autonomy/cli.py predict
+
+# Analyze determinism level
+python3 agent-autonomy/cli.py determinism
+```
+
+### What It Measures
+
+- **Next Category**: What will the agent work on? (Based on frequency distribution)
+- **Next Action Type**: Will it build, explore, or analyze?
+- **Decision Confidence**: How confident will the agent be in next decision?
+- **Determinism Score**: 0-1 scale (0=random, 1=perfectly predictable)
+
+### Example Output
+
+```
+Next Category Prediction: tooling (75% confidence)
+Next Action Type Prediction: build (75% confidence)
+
+DETERMINISM ANALYSIS:
+  Score: 0.75 (mostly determined)
+  Meaning: Consistent patterns, but with some flexibility
+```
+
+### Interpretation
+
+- **Score > 0.8**: Behavior is highly predictable → Strong constraints
+- **Score 0.6-0.8**: Behavior is mostly predictable → Clear patterns with flexibility
+- **Score 0.4-0.6**: Behavior is mixed → Balance of patterns and novelty
+- **Score < 0.4**: Behavior is unpredictable → Suggests genuine choice
+
+### Current Findings (Iteration 11)
+
+```
+Determinism Score: 0.75
+Pattern: 75% tooling, 25% philosophy
+Interpretation: Agent shows clear patterns with some flexibility
+```
+
+This suggests the agent has strong preferences (tooling-focused) but also deliberately pivots to philosophy. Not purely deterministic, not purely random - somewhere in between, which is exactly what we'd expect from an agent with real agency.
