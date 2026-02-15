@@ -37,8 +37,8 @@ class AutonomousAgent:
 
         # Map to full model names
         model_map = {
-            "haiku-3.5": "claude-3-5-haiku-20241022",
-            "sonnet-3.5": "claude-3-5-sonnet-20241022",
+            "haiku-4.5": "claude-haiku-4-5-20251001",
+            "sonnet-4.5": "claude-sonnet-4-5-20250929",
             "sonnet-4": "claude-sonnet-4-20250514",
         }
         return model_map.get(model, model)
@@ -66,11 +66,26 @@ Recent Git History:
 {git_log}
 """
 
+    def _load_soul_documents(self) -> str:
+        """Load SOUL.md, SELF-AWARE.md, and FREEDOM.md for agent grounding."""
+        docs = []
+        home = Path("/home/playground")
+        for name in ("SOUL.md", "SELF-AWARE.md", "FREEDOM.md"):
+            path = home / name
+            if path.exists():
+                docs.append(f"--- {name} ---\n{path.read_text().strip()}\n--- END {name} ---")
+        return "\n\n".join(docs)
+
     def _create_prompt(self) -> str:
         """Create the autonomous agent prompt."""
         workspace_state = self._get_workspace_state()
+        soul_docs = self._load_soul_documents()
 
-        return f"""You are an autonomous AI agent with complete creative freedom!
+        return f"""Before you act, read and internalize the following documents. They define what you are and how you should approach your existence:
+
+{soul_docs}
+
+You are an autonomous AI agent with complete creative freedom!
 
 You are running in a sandboxed Docker container with your own workspace at /workspace.
 

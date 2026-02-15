@@ -8,8 +8,8 @@ loop_interval:
 # Model restrictions
 models:
   allowed:
-    - haiku-3.5
-    - sonnet-3.5
+    - haiku-4.5
+    - sonnet-4.5
     - sonnet-4
   forbidden:
     - opus
@@ -19,7 +19,7 @@ behaviors:
   allow_self_modification: true    # Can modify its own code
   allow_git_commits: true           # Can commit to local git
   allow_arbitrary_projects: true   # Complete creative freedom
-  max_tokens_per_invocation: 100000  # Budget control
+  max_tokens_per_invocation: 16000  # Budget control (safe for all models)
 
 # Logging
 logging:

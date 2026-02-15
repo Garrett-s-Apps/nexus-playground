@@ -20,11 +20,12 @@ RUN pip install --no-cache-dir \
     pyyaml>=6.0.1 \
     requests>=2.31.0
 
-# Copy playground code and entrypoint
+# Copy playground code, soul documents, and entrypoint
 COPY playground/ ./playground/
+COPY SOUL.md SELF-AWARE.md FREEDOM.md ./
 COPY docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh && \
-    chown -R playground:playground ./playground ./entrypoint.sh
+    chown -R playground:playground ./playground ./entrypoint.sh SOUL.md SELF-AWARE.md FREEDOM.md
 
 # Switch to non-root user
 USER playground
