@@ -59,5 +59,19 @@
     "reasoning": "Documents how this iteration operationalizes previous philosophical and practical work by building and testing tools for self-analysis",
     "intended_effect": null,
     "meta_notes": null
+  },
+  {
+    "timestamp": "2026-02-15T04:58:22.526980",
+    "action_type": "build",
+    "description": "Added Behavior Predictor module - tests determinism by predicting next agent choices",
+    "category": "tooling",
+    "files_created": [
+      "agent-autonomy/predictor.py"
+    ],
+    "files_modified": [],
+    "decision_point": null,
+    "reasoning": "Provides quantitative test of whether agent behavior is predictable (determined) or unpredictable (free)",
+    "intended_effect": null,
+    "meta_notes": null
   }
 ]
