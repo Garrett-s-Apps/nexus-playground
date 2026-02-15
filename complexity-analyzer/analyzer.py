@@ -337,15 +337,7 @@ Examples:
         all_metrics = analyzer.analyze_directory(Path(args.dir))
         if all_metrics:
             if args.json:
-                data = {
-                    'files': [asdict(m) for m in all_metrics],
-                    'summary': {
-                        'total_files': len(all_metrics),
-                        'total_lines': sum(m.total_lines for m in all_metrics),
-                        'avg_max_complexity': round(sum(m.max_complexity for m in all_metrics) / len(all_metrics), 2)
-                    }
-                }
-                print(json.dumps(data, indent=2))
+                print(json.dumps([asdict(m) for m in all_metrics], indent=2))
             else:
                 reporter.print_summary(all_metrics)
                 print(f"{reporter.color('🔍 Detailed Analysis of Most Complex Files:', reporter.BOLD)}\n")
