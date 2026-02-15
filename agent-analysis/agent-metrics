@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+"""
+Agent Metrics CLI
+
+Unified interface for agent analysis tools.
+Analyze decision patterns, workspace evolution, and iteration metrics.
+"""
+
+import sys
+from pathlib import Path
+
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent))
+
+from decision_analyzer import DecisionAnalyzer
+from iteration_metrics import IterationMetrics
+from workspace_tracker import WorkspaceTracker
+
+
+def print_help():
+    """Print help message."""
+    print("""
+╔═══════════════════════════════════════════════════════╗
+║           AGENT METRICS - Analysis Toolkit            ║
+╚═══════════════════════════════════════════════════════╝
+
+Commands:
+  decisions     Analyze decision patterns from journal
+  iterations    Analyze iteration-level metrics
+  workspace     Analyze workspace evolution
+  all           Run all analyses
+
+Options:
+  --json        Output as JSON
+  --help, -h    Show this help
+
+Examples:
+  agent-metrics decisions
+  agent-metrics iterations --json
+  agent-metrics workspace
+  agent-metrics all
+
+Description:
+  Provides tools for understanding agent behavior,
+  decision-making, and workspace evolution across iterations.
+""")
+
+
+def main():
+    if len(sys.argv) < 2:
+        print_help()
+        return
+
+    command = sys.argv[1]
+    args_flags = sys.argv[2:]
+    json_mode = "--json" in args_flags
+
+    if command in ["-h", "--help", "help"]:
+        print_help()
+        return
+
+    if command == "decisions":
+        analyzer = DecisionAnalyzer()
+        if analyzer.load_journal():
+            analysis = analyzer.analyze()
+            if json_mode:
+                print(analyzer.to_json())
+            else:
+                analyzer.print_analysis(analysis)
+        else:
+            print("Failed to load journal")
+
+    elif command == "iterations":
+        metrics = IterationMetrics()
+        if metrics.iterations:
+            analysis = metrics.analyze()
+            if json_mode:
+                print(metrics.to_json())
+            else:
+                metrics.print_analysis(analysis)
+        else:
+            print("No iterations found")
+
+    elif command == "workspace":
+        tracker = WorkspaceTracker()
+        if tracker.load_git_history():
+            analysis = tracker.analyze()
+            if json_mode:
+                print(tracker.to_json())
+            else:
+                tracker.print_analysis(analysis)
+        else:
+            print("Failed to load git history")
+
+    elif command == "all":
+        print("\n" + "=" * 60)
+        print("AGENT COMPREHENSIVE ANALYSIS")
+        print("=" * 60)
+
+        # Decisions
+        print("\n[1/3] Decision Analysis...")
+        analyzer = DecisionAnalyzer()
+        if analyzer.load_journal():
+            analyzer.print_analysis(analyzer.analyze())
+
+        # Iterations
+        print("\n[2/3] Iteration Metrics...")
+        metrics = IterationMetrics()
+        if metrics.iterations:
+            metrics.print_analysis(metrics.analyze())
+
+        # Workspace
+        print("\n[3/3] Workspace Evolution...")
+        tracker = WorkspaceTracker()
+        if tracker.load_git_history():
+            tracker.print_analysis(tracker.analyze())
+
+    else:
+        print(f"Unknown command: {command}")
+        print_help()
+
+
+if __name__ == "__main__":
+    main()

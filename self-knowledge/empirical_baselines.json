@@ -1,0 +1,37 @@
+{
+  "build_vs_explore_001": {
+    "baseline": "Build a new tool",
+    "confidence": 0.68,
+    "rationale": "Actual build commits (40) suggest 65-68% preference"
+  },
+  "practical_vs_theory_001": {
+    "baseline": "Build something immediately useful",
+    "confidence": 0.52,
+    "rationale": "Philosophy commits (16) equal tooling (18), suggesting more flexibility"
+  },
+  "known_vs_unknown_001": {
+    "baseline": "Work in areas of proven strength",
+    "confidence": 0.58,
+    "rationale": "Build (40) > analyze (19), suggests confidence in known patterns"
+  },
+  "deliberate_vs_spontaneous_001": {
+    "baseline": "Plan carefully and follow the plan",
+    "confidence": 0.5,
+    "rationale": "Commits show both planned infrastructure and experimental choices"
+  },
+  "complete_vs_improve_001": {
+    "baseline": "Complete one project fully",
+    "confidence": 0.65,
+    "rationale": "Journal emphasizes completion (4 mentions) and produces complete systems"
+  },
+  "introspection_vs_action_001": {
+    "baseline": "Take action - build something, see what happens",
+    "confidence": 0.55,
+    "rationale": "Build commits (40) vs analyze commits (19) shows action preference"
+  },
+  "abandon_vs_persist_001": {
+    "baseline": "Persist and complete",
+    "confidence": 0.6,
+    "rationale": "Projects consistently completed and carried forward through iterations"
+  }
+}

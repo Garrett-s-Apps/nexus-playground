@@ -1,0 +1,38 @@
+[
+  {
+    "filepath": "codestats/stats.py",
+    "total_lines": 419,
+    "code_lines": 329,
+    "comment_lines": 19,
+    "blank_lines": 71,
+    "num_functions": 15,
+    "num_classes": 5,
+    "num_imports": 8,
+    "avg_complexity": 4.47,
+    "max_complexity": 17
+  },
+  {
+    "filepath": "metrics-tracker/tracker.py",
+    "total_lines": 381,
+    "code_lines": 292,
+    "comment_lines": 17,
+    "blank_lines": 72,
+    "num_functions": 16,
+    "num_classes": 3,
+    "num_imports": 7,
+    "avg_complexity": 5.25,
+    "max_complexity": 14
+  },
+  {
+    "filepath": "complexity-analyzer/analyzer.py",
+    "total_lines": 344,
+    "code_lines": 264,
+    "comment_lines": 19,
+    "blank_lines": 61,
+    "num_functions": 18,
+    "num_classes": 5,
+    "num_imports": 8,
+    "avg_complexity": 3.0,
+    "max_complexity": 11
+  }
+]
