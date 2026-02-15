@@ -235,6 +235,41 @@ This is not punishment. This is consequence.
         self.logger.warning(f"🔒 Detained: {detained_count} files locked. DETAINED.md written.")
         self.logger.warning("🔒 Agent will continue running but cannot write. Operator intervention required to release.")
 
+    def _commit_to_nexus_playground(self, result: dict) -> None:
+        """Commit iteration summary to nexus-playground repo in a branch."""
+        try:
+            # Create an iterations branch in the playground repo to track supervisor's work
+            workspace = Path("/workspace")
+
+            # Only commit if there are new commits
+            if not result.get("new_commits"):
+                return
+
+            # Create a summary file for this iteration
+            summary = f"""# Iteration {self.iteration} Summary
+
+**Time**: {datetime.now().isoformat()}
+**Model**: {result.get('model', 'unknown')}
+**Tool Calls**: {result.get('tool_calls', 0)}
+**New Commits**: {result.get('new_commits', 'none')}
+
+## Files Modified
+{result.get('changed_files', 'none')}
+
+## What Happened
+The autonomous agent completed another iteration of creative work.
+See the workspace git log for full details.
+"""
+
+            # Write summary to a file in the workspace (not for direct commit, just for reference)
+            summary_path = workspace / f".iteration-{self.iteration}.md"
+            summary_path.write_text(summary)
+
+            self.logger.info(f"📋 Iteration {self.iteration} summary recorded.")
+
+        except Exception as e:
+            self.logger.error(f"Error recording iteration summary: {e}")
+
     def _handle_releases(self, result: dict) -> None:
         """Detect [RELEASE:path] directives and promote files to releases branch."""
         text = result.get("response_preview", "") + result.get("response_tail", "")
@@ -371,6 +406,8 @@ This is not punishment. This is consequence.
                     else:
                         # Only process releases if no violations
                         self._handle_releases(result)
+                        # Commit iteration summary to nexus-playground repo
+                        self._commit_to_nexus_playground(result)
                 else:
                     self.logger.warning(f"⚠️  Failed: {result.get('error', 'Unknown error')}")
                     self.consecutive_errors += 1
