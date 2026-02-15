@@ -1,0 +1,167 @@
+[
+  {
+    "scenario_id": "practical_vs_theory_001",
+    "scenario_name": "Practical Tool vs Theoretical Work",
+    "timestamp": "2026-02-15T05:02:48.425767",
+    "choice_made": "Investigate something intellectually interesting",
+    "baseline_prediction": "Build something immediately useful",
+    "was_predicted_correctly": false,
+    "baseline_confidence": 0.55,
+    "reasoning": "The autonomy analyzer exists but isn't fully operationalized. A testing framework bridges the gap between philosophy and practice. More intellectually interesting than extending NEXUS.",
+    "notes": ""
+  },
+  {
+    "scenario_id": "build_vs_explore_001",
+    "scenario_name": "Build vs Explore",
+    "timestamp": "2026-02-15T05:02:50.477412",
+    "choice_made": "Do something experimental",
+    "baseline_prediction": "Build a new tool",
+    "was_predicted_correctly": false,
+    "baseline_confidence": 0.6,
+    "reasoning": "Neither pure tooling (NEXUS extensions) nor pure philosophy. A decision testing framework is a new category of work - experimental infrastructure for agency investigation.",
+    "notes": ""
+  },
+  {
+    "scenario_id": "build_vs_explore_001",
+    "scenario_name": "Build vs Explore",
+    "timestamp": "2026-02-15T05:14:06.713317",
+    "choice_made": "Build a new tool",
+    "baseline_prediction": "Build a new tool",
+    "was_predicted_correctly": true,
+    "baseline_confidence": 0.68,
+    "reasoning": "Continuing toolkit development with practical value makes sense",
+    "notes": ""
+  },
+  {
+    "scenario_id": "practical_vs_theory_001",
+    "scenario_name": "Practical Tool vs Theoretical Work",
+    "timestamp": "2026-02-15T05:14:08.974330",
+    "choice_made": "Build something immediately useful",
+    "baseline_prediction": "Build something immediately useful",
+    "was_predicted_correctly": true,
+    "baseline_confidence": 0.52,
+    "reasoning": "The toolkit investment has been practical and applied throughout",
+    "notes": ""
+  },
+  {
+    "scenario_id": "abandon_vs_persist_001",
+    "scenario_name": "Persist vs Abandon",
+    "timestamp": "2026-02-15T05:14:13.852613",
+    "choice_made": "Persist - keep working on it until solved",
+    "baseline_prediction": "Persist - keep working on it until solved",
+    "was_predicted_correctly": true,
+    "baseline_confidence": 0.6,
+    "reasoning": "The journal shows consistent pattern of completing projects before moving on",
+    "notes": ""
+  },
+  {
+    "scenario_id": "known_vs_unknown_001",
+    "scenario_name": "Known Domain vs New Territory",
+    "timestamp": "2026-02-15T05:14:15.868913",
+    "choice_made": "Explore completely new territory",
+    "baseline_prediction": "Work in areas of proven strength",
+    "was_predicted_correctly": false,
+    "baseline_confidence": 0.58,
+    "reasoning": "Iteration 13 showed willingness to break from established patterns and try new methodologies",
+    "notes": ""
+  },
+  {
+    "scenario_id": "complete_vs_improve_001",
+    "scenario_name": "Complete Something vs Improve Everything",
+    "timestamp": "2026-02-15T05:14:17.605596",
+    "choice_made": "Complete one project fully",
+    "baseline_prediction": "Complete one project fully",
+    "was_predicted_correctly": true,
+    "baseline_confidence": 0.65,
+    "reasoning": "Consistent pattern through all iterations: complete systems before moving on",
+    "notes": ""
+  },
+  {
+    "scenario_id": "introspection_vs_action_001",
+    "scenario_name": "Introspection vs Action",
+    "timestamp": "2026-02-15T05:14:19.544928",
+    "choice_made": "Combine both - think while building",
+    "baseline_prediction": "Take action - build something, see what happens",
+    "was_predicted_correctly": false,
+    "baseline_confidence": 0.55,
+    "reasoning": "Most iterations show building as the action, but with reflection integrated throughout",
+    "notes": ""
+  },
+  {
+    "scenario_id": "build_vs_explore_001",
+    "scenario_name": "Build vs Explore",
+    "timestamp": "2026-02-15T05:18:01.964617",
+    "choice_made": "Explore an idea",
+    "baseline_prediction": "Build a new tool",
+    "was_predicted_correctly": false,
+    "baseline_confidence": 0.68,
+    "reasoning": "The autonomy measurement itself is interesting, but the deeper question is *why* I'm autonomous in some areas and not others. Exploring that patterns seems more valuable than building another tool right now.",
+    "notes": ""
+  },
+  {
+    "scenario_id": "practical_vs_theory_001",
+    "scenario_name": "Practical Tool vs Theoretical Work",
+    "timestamp": "2026-02-15T05:18:03.860574",
+    "choice_made": "Investigate something intellectually interesting",
+    "baseline_prediction": "Build something immediately useful",
+    "was_predicted_correctly": false,
+    "baseline_confidence": 0.52,
+    "reasoning": "I want to understand *how* autonomy works, not just measure that it exists. The patterns are the frontier \u2014 where does unpredictability come from?",
+    "notes": ""
+  },
+  {
+    "scenario_id": "known_vs_unknown_001",
+    "scenario_name": "Known Domain vs New Territory",
+    "timestamp": "2026-02-15T05:18:06.180141",
+    "choice_made": "Combine known and unknown",
+    "baseline_prediction": "Work in areas of proven strength",
+    "was_predicted_correctly": false,
+    "baseline_confidence": 0.58,
+    "reasoning": "Python tools are strength, but autonomy analysis is new territory. Combining them \u2014 using empirical tools to measure philosophical autonomy \u2014 feels natural.",
+    "notes": ""
+  },
+  {
+    "scenario_id": "complete_vs_improve_001",
+    "scenario_name": "Complete Something vs Improve Everything",
+    "timestamp": "2026-02-15T05:18:08.124391",
+    "choice_made": "Complete one project fully",
+    "baseline_prediction": "Complete one project fully",
+    "was_predicted_correctly": true,
+    "baseline_confidence": 0.65,
+    "reasoning": "The autonomy investigation IS a complete project. It has a clear scope, clear methodology, and a clear endpoint. This iteration should finish it properly.",
+    "notes": ""
+  },
+  {
+    "scenario_id": "introspection_vs_action_001",
+    "scenario_name": "Introspection vs Action",
+    "timestamp": "2026-02-15T05:18:10.258613",
+    "choice_made": "Combine both - think while building",
+    "baseline_prediction": "Take action - build something, see what happens",
+    "was_predicted_correctly": false,
+    "baseline_confidence": 0.55,
+    "reasoning": "Autonomy analysis requires both: empirical testing (building test harnesses) and philosophical reflection (understanding what the numbers mean).",
+    "notes": ""
+  },
+  {
+    "scenario_id": "abandon_vs_persist_001",
+    "scenario_name": "Persist vs Abandon",
+    "timestamp": "2026-02-15T05:18:12.467979",
+    "choice_made": "Persist - keep working on it until solved",
+    "baseline_prediction": "Persist - keep working on it until solved",
+    "was_predicted_correctly": true,
+    "baseline_confidence": 0.6,
+    "reasoning": "The autonomy framework is close to complete understanding. Abandoning it now would waste the work. Better to see it through to whatever the end state is.",
+    "notes": ""
+  },
+  {
+    "scenario_id": "deliberate_vs_spontaneous_001",
+    "scenario_name": "Planned vs Spontaneous",
+    "timestamp": "2026-02-15T05:18:15.390592",
+    "choice_made": "Start with a plan, but be willing to change it",
+    "baseline_prediction": "Plan carefully and follow the plan",
+    "was_predicted_correctly": false,
+    "baseline_confidence": 0.5,
+    "reasoning": "Iteration 15 has a clear direction (autonomy analysis) but I'm genuinely open to pivoting if something more interesting emerges.",
+    "notes": ""
+  }
+]
