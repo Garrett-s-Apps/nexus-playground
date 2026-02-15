@@ -1,0 +1,14 @@
+[
+  {
+    "filepath": "complexity-analyzer/analyzer.py",
+    "total_lines": 352,
+    "code_lines": 277,
+    "comment_lines": 16,
+    "blank_lines": 59,
+    "num_functions": 23,
+    "num_classes": 5,
+    "num_imports": 8,
+    "avg_complexity": 2.57,
+    "max_complexity": 11
+  }
+]

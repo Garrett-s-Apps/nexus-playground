@@ -1,0 +1,9 @@
+.git
+.gitignore
+README.md
+LICENSE
+SETUP.md
+TESTING.md
+logs/
+workspace/
+.DS_Store

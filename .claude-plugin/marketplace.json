@@ -1,0 +1,33 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "nexus-playground-marketplace",
+  "description": "NEXUS Playground - Autonomous AI sandbox for creative experimentation",
+  "owner": {
+    "name": "Garrett Eaglin",
+    "url": "https://github.com/Garrett-s-Apps"
+  },
+  "plugins": [
+    {
+      "name": "nexus-playground",
+      "description": "Autonomous AI sandbox that builds whatever it wants in complete isolation. Runs continuously in Docker with creative freedom while staying safely contained.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Garrett Eaglin",
+        "url": "https://github.com/Garrett-s-Apps"
+      },
+      "repository": "https://github.com/Garrett-s-Apps/nexus-playground",
+      "source": "./",
+      "license": "MIT",
+      "category": "automation",
+      "tags": [
+        "autonomous",
+        "ai",
+        "sandbox",
+        "docker",
+        "playground",
+        "self-modifying",
+        "creative-ai"
+      ]
+    }
+  ]
+}
