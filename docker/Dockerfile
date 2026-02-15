@@ -26,7 +26,7 @@ COPY SOUL.md SELF-AWARE.md FREEDOM.md ./
 COPY docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh && \
     chown -R playground:playground ./playground ./entrypoint.sh SOUL.md SELF-AWARE.md FREEDOM.md && \
-    chmod 444 ./playground/config.yaml
+    chmod 444 ./playground/config.yaml ./playground/supervisor.py
 
 # Switch to non-root user
 USER playground
