@@ -1,28 +1,37 @@
-FROM python:3.11-slim
+FROM python:3.11-alpine
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies (Alpine uses apk)
+RUN apk add --no-cache \
     git \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    bash
 
-# Create non-root user
-RUN useradd -m -s /bin/bash playground && \
+# Create non-root user (Alpine uses adduser)
+RUN adduser -D -s /bin/bash playground && \
     mkdir -p /workspace /logs && \
     chown -R playground:playground /workspace /logs
 
 # Set working directory
 WORKDIR /home/playground
 
-# Copy playground code
-COPY playground/ ./playground/
-RUN chown -R playground:playground ./playground
-
-# Install Python dependencies
+# Install Python dependencies directly (no requirements.txt in build context)
 RUN pip install --no-cache-dir \
-    anthropic \
-    pyyaml \
-    requests
+    anthropic>=0.40.0 \
+    pyyaml>=6.0.1 \
+    requests>=2.31.0
+
+# Copy playground code, soul documents, and entrypoint
+COPY playground/ ./playground/
+COPY SOUL.md SELF-AWARE.md FREEDOM.md ./
+COPY docker/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh && \
+    chown -R playground:playground ./playground ./entrypoint.sh SOUL.md SELF-AWARE.md FREEDOM.md && \
+    chmod 444 ./playground/config.yaml && \
+    python3 -m py_compile ./playground/supervisor.py && \
+    mv ./playground/__pycache__/supervisor.cpython-311.pyc ./playground/supervisor.pyc && \
+    rm ./playground/supervisor.py && \
+    rm -rf ./playground/__pycache__ && \
+    chmod 444 ./playground/supervisor.pyc
 
 # Switch to non-root user
 USER playground
@@ -42,5 +51,5 @@ ENV PYTHONUNBUFFERED=1
 ENV WORKSPACE_DIR=/workspace
 ENV LOGS_DIR=/logs
 
-# Start supervisor
-CMD ["python", "-u", "playground/supervisor.py"]
+# Start supervisor via entrypoint
+ENTRYPOINT ["./entrypoint.sh"]

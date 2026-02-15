@@ -9,8 +9,8 @@ __pycache__/
 dist/
 build/
 
-# Logs
-logs/
+# Logs (but allow skills/logs/ directory)
+/logs/
 *.log
 
 # Environment
@@ -31,5 +31,5 @@ logs/
 .DS_Store
 Thumbs.db
 
-# Workspace (container-managed)
-workspace/
+# Workspace (container-managed, but allow skills/workspace/ directory)
+/workspace/

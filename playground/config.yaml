@@ -2,24 +2,25 @@
 
 # Loop timing (seconds)
 loop_interval:
-  min: 60    # Minimum 1 minute between invocations
-  max: 300   # Maximum 5 minutes between invocations
+  min: 60    # Default minimum between invocations
+  max: 300   # Default maximum between invocations
+  skip_allowed: true  # Agent can request to skip sleep entirely
 
 # Model restrictions
 models:
   allowed:
-    - haiku-3.5
-    - sonnet-3.5
-    - sonnet-4
+    - haiku-4.5
   forbidden:
     - opus
+    - sonnet-4.5
+    - sonnet-4
 
 # Behavior controls
 behaviors:
   allow_self_modification: true    # Can modify its own code
   allow_git_commits: true           # Can commit to local git
   allow_arbitrary_projects: true   # Complete creative freedom
-  max_tokens_per_invocation: 100000  # Budget control
+  max_tokens_per_invocation: 16000  # Budget control (safe for all models)
 
 # Logging
 logging:
