@@ -1,0 +1,228 @@
+#!/usr/bin/env python3
+"""
+NEXUS - Unified code and repository analysis toolkit
+
+A comprehensive suite of tools for understanding code quality, complexity,
+development patterns, metrics trends, and refactoring opportunities.
+All analysis tools in one place.
+
+Usage:
+  nexus analyze [--dir DIR] [--file FILE] [--json] [--no-color]
+  nexus stats [--repo REPO] [--json] [--no-color]
+  nexus advise [--source FILE] [--json] [--no-color]
+  nexus refactor [--dir DIR] [--file FILE] [--json] [--no-color]
+  nexus track save --source {analyze|stats} [--commit HASH] [--dir DIR]
+  nexus track show-trend --source {analyze|stats} [--dir DIR] [--no-color]
+  nexus track history --source {analyze|stats} [--dir DIR] [--no-color]
+  nexus --version
+  nexus --help
+"""
+
+import sys
+import subprocess
+import argparse
+from pathlib import Path
+
+
+TOOLS_DIR = Path(__file__).parent
+
+
+def run_tool(tool_name, args):
+    """Run a tool by name with given arguments"""
+    if tool_name == 'analyze':
+        tool_path = TOOLS_DIR / 'complexity-analyzer' / 'analyzer.py'
+    elif tool_name == 'stats':
+        tool_path = TOOLS_DIR / 'codestats' / 'stats.py'
+    elif tool_name == 'advise':
+        tool_path = TOOLS_DIR / 'code-advisor' / 'advisor.py'
+    elif tool_name == 'refactor':
+        tool_path = TOOLS_DIR / 'code-refactor' / 'refactor.py'
+    elif tool_name == 'track':
+        tool_path = TOOLS_DIR / 'metrics-tracker' / 'tracker.py'
+    else:
+        print(f"Unknown tool: {tool_name}", file=sys.stderr)
+        sys.exit(1)
+    
+    if not tool_path.exists():
+        print(f"Tool not found: {tool_path}", file=sys.stderr)
+        sys.exit(1)
+    
+    # Run the tool
+    try:
+        result = subprocess.run(
+            [sys.executable, str(tool_path)] + args,
+            cwd=TOOLS_DIR
+        )
+        sys.exit(result.returncode)
+    except KeyboardInterrupt:
+        print("\nInterrupted", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error running tool: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def print_version():
+    """Print version information"""
+    print("NEXUS v1.2.0")
+    print("Unified code and repository analysis toolkit")
+
+
+def print_help():
+    """Print help information"""
+    help_text = """
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                           NEXUS v1.2.0                                       ║
+║           Unified Code and Repository Analysis Toolkit                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+USAGE:
+  nexus COMMAND [OPTIONS]
+
+COMMANDS:
+  analyze              Analyze code complexity and quality metrics
+  advise               Generate actionable recommendations from metrics
+  refactor             Find refactoring opportunities in code
+  stats                Analyze git repository statistics
+  track                Track and compare metrics over time
+  --help, -h           Show this help message
+  --version            Show version information
+
+EXAMPLES:
+
+  # Analyze code complexity in current directory
+  nexus analyze
+
+  # Get recommendations for improving code
+  nexus analyze --json | nexus advise
+
+  # Find refactoring opportunities
+  nexus refactor --dir src/
+
+  # Analyze git repository
+  nexus stats
+
+  # Save metrics snapshot
+  nexus analyze --json | nexus track save --source analyze
+
+  # Check for regressions
+  nexus analyze --json | nexus track show-trend --source analyze
+
+  # Complete workflow
+  nexus analyze --json | tee metrics.json | nexus advise
+  nexus refactor --dir src/
+  nexus stats --json | nexus track save --source stats
+
+TOOLS:
+
+  📊 ANALYZE (Code Complexity Analyzer)
+    Analyzes Python code for cyclomatic complexity, code metrics,
+    and quality indicators. Helps identify complex functions,
+    understand code organization, and prioritize refactoring.
+
+  💡 ADVISE (Code Advisor)
+    Generates actionable recommendations based on complexity metrics.
+    Turns raw metrics into specific, practical improvement suggestions.
+    Helps prioritize refactoring work by severity and impact.
+
+  🔧 REFACTOR (Code Refactoring Engine)
+    Identifies specific refactoring opportunities in your code.
+    Analyzes complexity, nesting depth, function size, and duplication.
+    Helps you understand what to refactor and why.
+
+  📈 STATS (CodeStats - Repository Analysis)
+    Analyzes git history for contributor activity, development
+    patterns, commit frequency, and code change metrics.
+
+  📉 TRACK (Metrics Tracker - Trend Analysis)
+    Compares current metrics against historical snapshots.
+    Shows trends, regressions, and improvements over time.
+    Enables regression detection and impact measurement.
+
+COMMON WORKFLOWS:
+
+  # Get complete project snapshot with recommendations
+  nexus analyze --json | tee /tmp/metrics.json | nexus advise
+  nexus refactor --dir src/
+
+  # Before code review
+  nexus analyze | nexus advise
+  nexus refactor --dir src/
+
+  # Find opportunities to improve a specific file
+  nexus refactor --file mymodule.py
+
+  # Track metrics and refactoring over time
+  nexus analyze --json | nexus track save --source analyze
+  nexus refactor --dir src/ --json > refactoring_plan.json
+
+  # For CI/CD pipelines
+  nexus analyze --json | nexus advise --json
+  nexus refactor --dir src/ --json | jq '.[] | select(.severity == "high")'
+
+TYPICAL WORKFLOW:
+
+  1. Analyze code complexity
+     $ nexus analyze
+     
+  2. Get recommendations for improvement
+     $ nexus analyze --json | nexus advise
+     
+  3. Find specific refactoring opportunities
+     $ nexus refactor --dir src/
+     
+  4. Review and apply changes manually
+     (Edit files based on recommendations)
+     
+  5. Verify improvements
+     $ nexus analyze
+     
+  6. Track progress over time
+     $ nexus analyze --json | nexus track save --source analyze
+     $ nexus analyze --json | nexus track show-trend --source analyze
+
+DOCUMENTATION:
+
+  For detailed documentation on each tool, see:
+  - complexity-analyzer/README.md  (Code analysis)
+  - code-advisor/README.md         (Actionable recommendations)
+  - code-refactor/README.md        (Refactoring opportunities)
+  - codestats/README.md            (Git analysis)
+  - metrics-tracker/README.md      (Trend tracking)
+  - Main README.md                 (Overview)
+
+VERSION: 1.2.0
+LICENSE: MIT
+"""
+    print(help_text)
+
+
+def main():
+    """Main entry point"""
+    if len(sys.argv) < 2:
+        print_help()
+        sys.exit(0)
+    
+    # Check for version or help
+    if sys.argv[1] in ('--version', '-v'):
+        print_version()
+        sys.exit(0)
+    
+    if sys.argv[1] in ('--help', '-h', 'help'):
+        print_help()
+        sys.exit(0)
+    
+    # Route to tool
+    tool_name = sys.argv[1]
+    tool_args = sys.argv[2:]
+    
+    if tool_name in ('analyze', 'stats', 'advise', 'refactor', 'track'):
+        run_tool(tool_name, tool_args)
+    else:
+        print(f"Unknown command: {tool_name}", file=sys.stderr)
+        print("Run 'nexus --help' for usage information", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

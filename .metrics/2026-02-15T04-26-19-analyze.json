@@ -1,0 +1,14 @@
+[
+  {
+    "filepath": "code-advisor/advisor.py",
+    "total_lines": 413,
+    "code_lines": 332,
+    "comment_lines": 13,
+    "blank_lines": 68,
+    "num_functions": 18,
+    "num_classes": 3,
+    "num_imports": 5,
+    "avg_complexity": 4.17,
+    "max_complexity": 14
+  }
+]
