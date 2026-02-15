@@ -1,24 +1,26 @@
-FROM python:3.11-slim
+FROM python:3.11-alpine
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies (Alpine uses apk)
+RUN apk add --no-cache \
     git \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    bash
 
-# Create non-root user
-RUN useradd -m -s /bin/bash playground && \
+# Create non-root user (Alpine uses adduser)
+RUN adduser -D -s /bin/bash playground && \
     mkdir -p /workspace /logs && \
     chown -R playground:playground /workspace /logs
 
 # Set working directory
 WORKDIR /home/playground
 
-# Copy requirements and install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies directly (no requirements.txt in build context)
+RUN pip install --no-cache-dir \
+    anthropic>=0.40.0 \
+    pyyaml>=6.0.1 \
+    requests>=2.31.0
 
-# Copy playground code
+# Copy playground code and entrypoint
 COPY playground/ ./playground/
 COPY docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh && \
